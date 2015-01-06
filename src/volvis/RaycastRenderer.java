@@ -86,7 +86,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
     // get a voxel from the volume data by nearest neighbor interpolation
     short getVoxel(double[] coord) {
-        if (trilinint) {// for now there is no noticeable diffrence between NN and TL inerpolation, so we choos NN due to it being faster.
+        if (trilinint) {
             int x = (int) Math.round(coord[0]);
             int y = (int) Math.round(coord[1]);
             int z = (int) Math.round(coord[2]);
@@ -156,7 +156,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 int castx = i * resolution + (resolution - 1) / 2;
                 int casty = j * resolution + (resolution - 1) / 2;
                 double[][] ray = CastRay(uVec, castx, imageCenter, vVec, casty, volumeCenter, viewVec);
-                TFColor voxelColor = computeColor(ray);
+                TFColor voxelColor = computeColor(ray,viewVec);
 
                 // BufferedImage expects a pixel color packed as ARGB in an int
                 int c_alpha = voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
@@ -195,6 +195,10 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
             0.5d * (getVoxel(x, y, z + 1) - getVoxel(x, y, z - 1))
         };
     }
+    
+    private double[] lGradientVector(double[] xyz) {
+        return lGradientVector(xyz[0], xyz[1], xyz[2]);
+    }
 
     private double computeSingleAlphaLevel(double x, double y, double z, int r, int fv) {
         double[] grad = lGradientVector(x, y, z);
@@ -229,7 +233,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         return computeMultiAlphaLevel(coord[0], coord[1], coord[2], fvnrs);
     }
 
-    private TFColor computeColor(double[] coord) {
+    private TFColor computeColor(double[] coord, double[] viewvec) {
         switch (mode) {
             case (MIP): {
                 return tFunc.getColor(getVoxel(coord));
@@ -239,7 +243,36 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
             }
             case (OPACITYWEIGHTING): {
                 TFColor col = tFunc.getColor(getVoxel(coord));
-                //TODO shading
+                double[] normal = lGradientVector(coord);
+                normal = VectorMath.normalize(normal);
+                double[] colorComponents = new double[]{col.r,col.g,col.b};
+                double[] lightsource = new double[]{1d,1d,1d};
+                double[] ka = new double[]{0.1d,0.1d,0.1d};
+                double[] kd = new double[]{0.5d,0.5d,0.5d};
+                double[] ks = new double[]{0.3d,0.3d,0.3d};
+                
+                ka = VectorMath.pairwiseMultiply(ka, colorComponents);
+                kd = VectorMath.pairwiseMultiply(kd, colorComponents);
+                ks = VectorMath.pairwiseMultiply(ks, colorComponents);
+                
+                double[] V = VectorMath.normalize(viewvec);
+                double[] L = V;
+                double[] VL = VectorMath.add(V, L);
+                double[] H = VectorMath.multiply(VL, 1d/VectorMath.length(VL));
+                double nu = 5d;
+                double k1=1d,k2=1d;
+                double dist = 1;//TODO
+                double[] res = new double[3];
+                for(int i = 0; i < 3; i ++)
+                {
+                    res[i]= lightsource[i]*ka[i]+
+                            lightsource[i]/(k1+k2*dist)*
+                            (kd[i]*VectorMath.dotproduct(normal, L)+
+                            ks[i]*Math.pow(VectorMath.dotproduct(normal, H),nu));
+                }
+                col.r = res[0];
+                col.g = res[1];
+                col.b = res[2];
                 return col;
             }
             default: {
@@ -248,7 +281,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         }
     }
 
-    private TFColor computeColor(double[][] ray) {
+    private TFColor computeColor(double[][] ray, double[] viewvec) {
         switch (mode) {
             case (MIP): {
                 int max = 0;
@@ -269,7 +302,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
             case (OPACITYWEIGHTING): {
                 TFColor color = new TFColor();
                 for (double[] coord : ray) {
-                    TFColor cur = computeColor(coord);
+                    TFColor cur = computeColor(coord, viewvec);
                     double a = computeMultiAlphaLevel(coord, values);
                     cur.a = a;
                     color.layer(cur);

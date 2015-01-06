@@ -46,5 +46,43 @@ public class VectorMath {
         return Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
     }
     
-
+    //multiply vector v by c
+    public static double[] multiply(double[] v, double c)
+    {
+        double[] res = new double[v.length];
+        for(int i = 0; i < v.length; i++)
+        {
+            res[i]=v[i]*c;
+        }
+        return res;
+    }
+    
+    //returns a normalized version of v
+    public static double[] normalize(double[] v)
+    {
+        double length = length(v);
+        return multiply(v, 1d/length);
+    }
+    
+    //adds the 2 vectors together
+    public static double[] add(double[] v,double[] u)
+    {
+        double[] res = new double[v.length];
+        for(int i = 0; i < v.length; i++)
+        {
+            res[i]=v[i]+u[i];
+        }
+        return res;
+    }
+    
+    //mutiplies the 2 vectors pairwise
+    public static double[] pairwiseMultiply(double[] v, double[] u)
+    {
+        double [] res = new double[v.length];
+        for(int i = 0; i < v.length; i++)
+        {
+            res[i] = v[i]*u[i];
+        }
+        return res;
+    }
 }
