@@ -4,13 +4,20 @@
  */
 package volvis;
 
+import datatypes.RenderResult;
 import gui.OpacityWeightEditor;
 import gui.OpacityWeightPanel;
 import gui.RaycastRendererPanel;
 import gui.TransferFunctionEditor;
 import java.awt.Component;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.media.opengl.GL2;
+import javax.swing.SwingWorker;
+import javax.swing.SwingWorker.StateValue;
 import util.ImageDrawer;
 import util.TFChangeListener;
 import volume.Volume;
@@ -93,29 +100,34 @@ public class RenderingController extends Renderer implements TFChangeListener {
     }
 
     @Override
-    public void visualize(ImageDrawer drawer, GL2 gl) {
+    public void visualize(ImageDrawer drawer, double[] viewMatrix, long renderingId) {
         stopRenderers();
         
         if (volume == null) {
             return;
         }
         
+        realRenderer = new RenderThread(drawer, viewMatrix, renderingId, mode, resolution, trilinint, volume, tFunc, oFunc);
+        realRenderer.execute();
+        
         if (resolution < 5) {
-            quickPreviewRenderer = new RenderThread(drawer, gl, mode, 5, trilinint, volume, tFunc, oFunc);
-            quickPreviewRenderer.execute();
+            RaycastRenderer localRenderer = new RaycastRenderer(mode, 5, trilinint, volume, tFunc, oFunc);
+            BufferedImage image = localRenderer.visualize(viewMatrix);
+            drawer.renderingDone(new RenderResult(renderingId, image, volume, resolution));
         }
-        if (resolution < 3) {
-            slowPreviewRenderer = new RenderThread(drawer, gl, mode, 3, trilinint, volume, tFunc, oFunc);
-          //  slowPreviewRenderer.execute();
-        }
-        realRenderer = new RenderThread(drawer, gl, mode, resolution, trilinint, volume, tFunc, oFunc);
-        //realRenderer.execute();
     }
     
     private void stopRenderers() {
         for (RenderThread t: new RenderThread[] {quickPreviewRenderer, slowPreviewRenderer, realRenderer}) {
-            if (t != null) {
+            if (t != null && t.getState() == StateValue.STARTED) {
                 t.stop();
+                try {
+                    t.get();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(RenderingController.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (ExecutionException ex) {
+                    Logger.getLogger(RenderingController.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
     }

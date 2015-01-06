@@ -6,6 +6,7 @@ package volvis;
 
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
+import datatypes.RenderResult;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -30,12 +31,15 @@ import volume.Volume;
  */
 public class Visualization implements GLEventListener, TFChangeListener, ImageDrawer {
 
-  GLU glu = new GLU();
+    GLU glu = new GLU();
     ArrayList<Renderer> renderers;
     GLCanvas canvas;
     int winWidth, winHeight;
     double fov = 20.0;
     TrackballInteractor trackball;
+    
+    private RenderResult imageBuffer;
+    private long renderingId = 0;
         
     public Visualization(GLCanvas canvas) {
         this.renderers = new ArrayList<Renderer>();
@@ -55,30 +59,46 @@ public class Visualization implements GLEventListener, TFChangeListener, ImageDr
         canvas.repaint(50);
     }
     
-
-  @Override
+    @Override
     public void changed() {
         canvas.display();
     }
 
-   @Override
+    @Override
     public void init(GLAutoDrawable drawable) {
        
     }
 
-   @Override
+    @Override
     public void display(GLAutoDrawable drawable) {
         // get the OpenGL rendering context
         GL2 gl = drawable.getGL().getGL2();
-       
-        // call the visualize() methods of all subscribed renderers
-        for (int i = 0; i < renderers.size(); i++) {
-            renderers.get(i).visualize(this, gl);
+        
+        if (imageBuffer != null) {
+            if (imageBuffer.getId() == renderingId) {
+                draw(gl, imageBuffer.getImage(), imageBuffer.getVolume());
+            }
+            
+            imageBuffer = null;
+        } else {
+            double[] viewMatrix = new double[4 * 4];
+            gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, viewMatrix, 0);
+        
+            // call the visualize() methods of all subscribed renderers
+            for (int i = 0; i < renderers.size(); i++) {
+                renderingId++;
+                renderers.get(i).visualize(this, viewMatrix, renderingId);
+            }
         }
     }
     
     @Override
-    public synchronized void draw(GL2 gl, BufferedImage image, Volume volume) {
+    public synchronized void renderingDone(RenderResult result) {
+        imageBuffer = result;
+        canvas.repaint();
+    }
+    
+    public void draw(GL2 gl, BufferedImage image, Volume volume) {
         // set up the projection transform
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glLoadIdentity();
@@ -199,7 +219,7 @@ public class Visualization implements GLEventListener, TFChangeListener, ImageDr
     }
 
     // reshape handles window resize
-   @Override
+    @Override
     public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
         GL2 gl = drawable.getGL().getGL2();
         gl.glViewport(0, 0, width, height);
@@ -216,40 +236,36 @@ public class Visualization implements GLEventListener, TFChangeListener, ImageDr
     @Override
     public void dispose(GLAutoDrawable glad) {
     }
-
    
-   class MousePressListener extends MouseAdapter {
+    class MousePressListener extends MouseAdapter {
 
-       @Override
-       public void mousePressed(MouseEvent e) {
-           trackball.setMousePos(e.getX(), e.getY());
+        @Override
+        public void mousePressed(MouseEvent e) {
+            trackball.setMousePos(e.getX(), e.getY());
            
-           for (int i = 0; i < renderers.size(); i++) {
-               renderers.get(i).setInteractiveMode(true);
-           }
-       }
+            for (int i = 0; i < renderers.size(); i++) {
+                renderers.get(i).setInteractiveMode(true);
+            }
+        }
        
-       @Override
-       public void mouseReleased(MouseEvent e) {
-           for (int i = 0; i < renderers.size(); i++) {
-               renderers.get(i).setInteractiveMode(false);
-           }
-           update();
-       }
-   }
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            for (int i = 0; i < renderers.size(); i++) {
+                renderers.get(i).setInteractiveMode(false);
+            }
+            update();
+        }
+    }
    
     class MouseMotionListener extends MouseMotionAdapter {
         
-        
-      @Override
+        @Override
         public void mouseDragged(MouseEvent e) {
              trackball.drag(e.getX(), e.getY());
              trackball.setRotating(true);
              update();
-          }
-          
         }
-    
+    }
     
     class MouseWheelHandler implements MouseWheelListener {
 
@@ -265,7 +281,5 @@ public class Visualization implements GLEventListener, TFChangeListener, ImageDr
             }
             update();
         }
-        
     }
-    
 }

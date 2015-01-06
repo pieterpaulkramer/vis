@@ -4,61 +4,52 @@
  */
 package volvis;
 
+import datatypes.RenderResult;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
-import javax.media.opengl.GL2;
 import javax.swing.SwingWorker;
 import util.ImageDrawer;
 import volume.Volume;
 
 public class RenderThread extends SwingWorker {
     
+    private long id;
     private RaycastRenderer renderer;
-    private GL2 gl;
+    private double[] viewMatrix;
     private int resolution;
     private Volume vol;
     private ImageDrawer drawer;
     
     private boolean stopped = false;
     
-    public RenderThread(ImageDrawer drawer, GL2 gl, int mode, int resolution, boolean trilinint, Volume vol, TransferFunction tFunc, OpacityFunction oFunc) {
+    public RenderThread(ImageDrawer drawer, double[] viewMatrix, long renderingId, int mode, int resolution, boolean trilinint, Volume vol, TransferFunction tFunc, OpacityFunction oFunc) {
         renderer = new RaycastRenderer(mode, resolution, trilinint, vol, tFunc, oFunc);
         
         this.vol = vol;
-        this.gl = gl;
+        this.viewMatrix = viewMatrix;
+        this.id = renderingId;
         this.resolution = resolution;
         this.drawer = drawer;
     }
 
     @Override
     public Object doInBackground() throws IOException {
-        System.out.println("Running renderer for thread "+resolution);
-        
-        double[] viewMatrix = new double[4 * 4];
-        gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, viewMatrix, 0);
-        
+        long t = System.currentTimeMillis();
         BufferedImage image = renderer.visualize(viewMatrix);        
-        if (image != null && !stopped) {
-            String filename = "image" + System.currentTimeMillis()+".jpg";
-            File f = new File(filename);
-            ImageIO.write(image, "jpg", f);
-            
-            System.out.println("Drawing renderer for thread "+resolution);
-            drawer.draw(gl, image, vol);
-        }
+        System.out.println("Execution time of renderer (resolution: "+resolution+"): "+(System.currentTimeMillis()-t)/1000.0);
         
-        System.out.println("Finished renderer for thread "+resolution);
+        if (image != null && !stopped) {
+            drawer.renderingDone(new RenderResult(id, image, vol, resolution));
+        }
         
         return null;
     }
     
-    public void stop() {
-        System.out.println("Stopping renderer for thread "+resolution);
+    public synchronized void stop() {
         renderer.stopSlicer();
-        
-        stopped = true;
     }
-    
 }

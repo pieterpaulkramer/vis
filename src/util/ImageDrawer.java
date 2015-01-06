@@ -4,9 +4,7 @@
  */
 package util;
 
-import java.awt.image.BufferedImage;
-import javax.media.opengl.GL2;
-import volume.Volume;
+import datatypes.RenderResult;
 
 /**
  *
@@ -14,6 +12,6 @@ import volume.Volume;
  */
 public interface ImageDrawer {
     
-    public void draw(GL2 gl, BufferedImage image, Volume volume);
+    public void renderingDone(RenderResult result);
     
 }

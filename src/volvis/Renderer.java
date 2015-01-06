@@ -58,5 +58,5 @@ public abstract class Renderer {
         }
     }
     
-    public abstract void visualize(ImageDrawer drawer, GL2 gl);
+    public abstract void visualize(ImageDrawer drawer, double[] viewMatrix, long renderingId);
 }
