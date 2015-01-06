@@ -36,14 +36,10 @@ public class RenderThread extends SwingWorker {
         this.resolution = resolution;
         this.drawer = drawer;
     }
-    
-    
 
     @Override
     public Object doInBackground() throws IOException {
-        long t = System.currentTimeMillis();
         BufferedImage image = renderer.visualize(viewMatrix);        
-        System.out.println("Execution time of renderer (resolution: "+resolution+"): "+(System.currentTimeMillis()-t)/1000.0);
         
         if (image != null && !stopped) {
             drawer.renderingDone(new RenderResult(id, image, vol, resolution));
