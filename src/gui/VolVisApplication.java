@@ -11,6 +11,7 @@ import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
 import volume.Volume;
 import volvis.RaycastRenderer;
+import volvis.RenderingController;
 import volvis.Visualization;
 
 /**
@@ -21,7 +22,7 @@ public class VolVisApplication extends javax.swing.JFrame {
 
     Visualization visualization;
     Volume volume;
-    RaycastRenderer raycastRenderer;
+    RenderingController renderController;
     
     /**
      * Creates new form VolVisApplication
@@ -37,10 +38,10 @@ public class VolVisApplication extends javax.swing.JFrame {
         visualization = new Visualization(glCanvas);
         glCanvas.addGLEventListener(visualization);
 
-        raycastRenderer = new RaycastRenderer();
-        visualization.addRenderer(raycastRenderer);
-        raycastRenderer.addTFChangeListener(visualization);
-        tabbedPanel.addTab("Raycaster", raycastRenderer.getPanel());
+        renderController = new RenderingController();
+        visualization.addRenderer(renderController);
+        renderController.addTFChangeListener(visualization);
+        tabbedPanel.addTab("Raycaster", renderController.getPanel());
         //*/
     }
 
@@ -164,7 +165,7 @@ public class VolVisApplication extends javax.swing.JFrame {
                 infoText = infoText.concat("dimensions:\t\t" + volume.getDimX() + " x " + volume.getDimY() + " x " + volume.getDimZ() + "\n");
                 infoText = infoText.concat("voxel value range:\t" + volume.getMinimum() + " - " + volume.getMaximum());
                 infoTextPane.setText(infoText);
-                raycastRenderer.setVolume(volume);
+                renderController.setVolume(volume);
                 visualization.update();
 
         }
