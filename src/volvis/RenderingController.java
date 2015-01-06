@@ -5,8 +5,10 @@
 package volvis;
 
 import gui.OpacityWeightEditor;
+import gui.OpacityWeightPanel;
 import gui.RaycastRendererPanel;
 import gui.TransferFunctionEditor;
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 import javax.media.opengl.GL2;
@@ -23,12 +25,12 @@ public class RenderingController extends Renderer implements TFChangeListener {
     private int resolution = 1;
     private boolean trilinint = false;
     private Volume volume = null;
-    private final List<int[]> values = new ArrayList<int[]>();
-    private RaycastRendererPanel panel;
+    private RaycastRendererPanel tFuncPanel;
     private TransferFunction tFunc;
     private TransferFunctionEditor tfEditor;
     private OpacityFunction oFunc;
     private OpacityWeightEditor owEditor;
+    private OpacityWeightPanel oWeightPanel;
     private double[] viewMatrix = new double[4 * 4];
     
     private RenderThread quickPreviewRenderer;
@@ -36,8 +38,8 @@ public class RenderingController extends Renderer implements TFChangeListener {
     private RenderThread realRenderer;
 
     public RenderingController() {
-        panel = new RaycastRendererPanel(this);
-        panel.setSpeedLabel("0");
+        tFuncPanel = new RaycastRendererPanel(this);
+        tFuncPanel.setSpeedLabel("0");
     }
 
     public void setMode(int mode) {
@@ -62,13 +64,13 @@ public class RenderingController extends Renderer implements TFChangeListener {
         tFunc.addTFChangeListener(this);
         
         tfEditor = new TransferFunctionEditor(tFunc, volume.getHistogram());
-        panel.setTransferFunctionEditor(tfEditor);
+        tFuncPanel.setTransferFunctionEditor(tfEditor);
         
         oFunc = new OpacityFunction(volume.getMinimum(), volume.getMaximum());
         oFunc.addTFChangeListener(this);
         
         owEditor = new OpacityWeightEditor(oFunc, volume.getHistogram());
-        
+        oWeightPanel.setOpacityWeightEditor(owEditor);
 
     }
 
@@ -79,8 +81,13 @@ public class RenderingController extends Renderer implements TFChangeListener {
         }
     }
 
-    public RaycastRendererPanel getPanel() {
-        return panel;
+    public RaycastRendererPanel getTFuncPanel() {
+        return tFuncPanel;
+    }
+    
+    
+    public Component getOWeightPanel() {
+        return oWeightPanel;
     }
 
     @Override
@@ -110,4 +117,5 @@ public class RenderingController extends Renderer implements TFChangeListener {
             }
         }
     }
+
 }
