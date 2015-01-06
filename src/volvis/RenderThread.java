@@ -23,6 +23,7 @@ public class RenderThread extends SwingWorker {
     private int resolution;
     private Volume vol;
     private ImageDrawer drawer;
+    private BufferedImage image;
     
     private boolean stopped = false;
     
@@ -35,6 +36,8 @@ public class RenderThread extends SwingWorker {
         this.resolution = resolution;
         this.drawer = drawer;
     }
+    
+    
 
     @Override
     public Object doInBackground() throws IOException {
