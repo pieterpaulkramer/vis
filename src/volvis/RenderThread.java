@@ -16,8 +16,8 @@ public class RenderThread extends SwingWorker {
     
     private final int resolution; // TODO remove
     
-    public RenderThread(GL2 gl, int mode, int resolution, boolean trilinint, Volume vol, TransferFunction tFunc) {
-        renderer = new RaycastRenderer(mode, resolution, trilinint, vol, tFunc);
+    public RenderThread(GL2 gl, int mode, int resolution, boolean trilinint, Volume vol, TransferFunction tFunc, OpacityFunction oFunc) {
+        renderer = new RaycastRenderer(mode, resolution, trilinint, vol, tFunc,oFunc);
         this.gl = gl;
         
         this.resolution = resolution;

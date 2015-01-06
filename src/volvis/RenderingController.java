@@ -4,6 +4,7 @@
  */
 package volvis;
 
+import gui.OpacityWeightEditor;
 import gui.RaycastRendererPanel;
 import gui.TransferFunctionEditor;
 import java.util.ArrayList;
@@ -26,6 +27,8 @@ public class RenderingController extends Renderer implements TFChangeListener {
     private RaycastRendererPanel panel;
     private TransferFunction tFunc;
     private TransferFunctionEditor tfEditor;
+    private OpacityFunction oFunc;
+    private OpacityWeightEditor owEditor;
     private double[] viewMatrix = new double[4 * 4];
     
     private RenderThread quickPreviewRenderer;
@@ -60,6 +63,12 @@ public class RenderingController extends Renderer implements TFChangeListener {
         
         tfEditor = new TransferFunctionEditor(tFunc, volume.getHistogram());
         panel.setTransferFunctionEditor(tfEditor);
+        
+        oFunc = new OpacityFunction(volume.getMinimum(), volume.getMaximum());
+        oFunc.addTFChangeListener(this);
+        
+        owEditor = new OpacityWeightEditor(oFunc, volume.getHistogram());
+        
 
     }
 
@@ -83,14 +92,14 @@ public class RenderingController extends Renderer implements TFChangeListener {
         }
         
         if (resolution < 5) {
-            quickPreviewRenderer = new RenderThread(gl, mode, 5, trilinint, volume, tFunc);
+            quickPreviewRenderer = new RenderThread(gl, mode, 5, trilinint, volume, tFunc,oFunc);
             quickPreviewRenderer.doInBackground();
         }
         if (resolution < 3) {
-            slowPreviewRenderer = new RenderThread(gl, mode, 3, trilinint, volume, tFunc);
+            slowPreviewRenderer = new RenderThread(gl, mode, 3, trilinint, volume, tFunc,oFunc);
             slowPreviewRenderer.doInBackground();
         }
-        realRenderer = new RenderThread(gl, mode, resolution, trilinint, volume, tFunc);
+        realRenderer = new RenderThread(gl, mode, resolution, trilinint, volume, tFunc,oFunc);
         realRenderer.doInBackground();
     }
     
