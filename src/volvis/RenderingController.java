@@ -26,7 +26,6 @@ public class RenderingController extends Renderer implements TFChangeListener {
     private RaycastRendererPanel panel;
     private TransferFunction tFunc;
     private TransferFunctionEditor tfEditor;
-    private double[] viewMatrix = new double[4 * 4];
     
     private RenderThread quickPreviewRenderer;
     private RenderThread slowPreviewRenderer;

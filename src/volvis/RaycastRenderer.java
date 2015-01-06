@@ -28,7 +28,7 @@ public class RaycastRenderer {
     private boolean trilinint;
     private Volume volume;
     private final List<int[]> values = new ArrayList<int[]>();
-    TransferFunction tFunc;
+    private TransferFunction tFunc;
     private BufferedImage image;
     private double[] viewMatrix = new double[4 * 4];
     private boolean computationRunning;
@@ -50,7 +50,7 @@ public class RaycastRenderer {
         image = new BufferedImage(imageSize, imageSize, BufferedImage.TYPE_INT_ARGB);
     }
 
-    void slicer(double[] viewMatrix) {
+    private boolean slicer(double[] viewMatrix) {
         // vector uVec and vVec define a plane through the origin, 
         // perpendicular to the view vector viewVec
         double[] viewVec = new double[3];
@@ -73,7 +73,7 @@ public class RaycastRenderer {
         for (int j = 0; j < image.getHeight() / resolution; j++) {
             for (int i = 0; i < image.getWidth() / resolution; i++) {
                 if (!computationRunning) {
-                    return;
+                    return false;
                 }
                 
                 int castx = i * resolution + (resolution - 1) / 2;
@@ -95,6 +95,7 @@ public class RaycastRenderer {
             }
         }
 
+        return true;
     }
     
     void stopSlicer() {
@@ -231,7 +232,6 @@ public class RaycastRenderer {
                 return tFunc.getColor(0);
             }
         }
-
     }
 
     private void drawBoundingBox(GL2 gl) {
@@ -297,40 +297,42 @@ public class RaycastRenderer {
 
         gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, viewMatrix, 0);
 
-        slicer(viewMatrix);
+        boolean slicerFinished = slicer(viewMatrix);
+        
+        if (slicerFinished) {
+            Texture texture = AWTTextureIO.newTexture(gl.getGLProfile(), image, false);
 
-        Texture texture = AWTTextureIO.newTexture(gl.getGLProfile(), image, false);
+            gl.glPushAttrib(GL2.GL_LIGHTING_BIT);
+            gl.glDisable(GL2.GL_LIGHTING);
+            gl.glEnable(GL2.GL_BLEND);
+            gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
 
-        gl.glPushAttrib(GL2.GL_LIGHTING_BIT);
-        gl.glDisable(GL2.GL_LIGHTING);
-        gl.glEnable(GL2.GL_BLEND);
-        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+            // draw rendered image as a billboard texture
+            texture.enable(gl);
+            texture.bind(gl);
+            double halfWidth = image.getWidth() / 2.0;
+            gl.glPushMatrix();
+            gl.glLoadIdentity();
+            gl.glBegin(GL2.GL_QUADS);
+            gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+            gl.glTexCoord2d(0.0, 0.0);
+            gl.glVertex3d(-halfWidth, -halfWidth, 0.0);
+            gl.glTexCoord2d(0.0, 1.0);
+            gl.glVertex3d(-halfWidth, halfWidth, 0.0);
+            gl.glTexCoord2d(1.0, 1.0);
+            gl.glVertex3d(halfWidth, halfWidth, 0.0);
+            gl.glTexCoord2d(1.0, 0.0);
+            gl.glVertex3d(halfWidth, -halfWidth, 0.0);
+            gl.glEnd();
+            texture.disable(gl);
+            texture.destroy(gl);
+            gl.glPopMatrix();
 
-        // draw rendered image as a billboard texture
-        texture.enable(gl);
-        texture.bind(gl);
-        double halfWidth = image.getWidth() / 2.0;
-        gl.glPushMatrix();
-        gl.glLoadIdentity();
-        gl.glBegin(GL2.GL_QUADS);
-        gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        gl.glTexCoord2d(0.0, 0.0);
-        gl.glVertex3d(-halfWidth, -halfWidth, 0.0);
-        gl.glTexCoord2d(0.0, 1.0);
-        gl.glVertex3d(-halfWidth, halfWidth, 0.0);
-        gl.glTexCoord2d(1.0, 1.0);
-        gl.glVertex3d(halfWidth, halfWidth, 0.0);
-        gl.glTexCoord2d(1.0, 0.0);
-        gl.glVertex3d(halfWidth, -halfWidth, 0.0);
-        gl.glEnd();
-        texture.disable(gl);
-        texture.destroy(gl);
-        gl.glPopMatrix();
+            gl.glPopAttrib();
 
-        gl.glPopAttrib();
-
-        if (gl.glGetError() > 0) {
-            System.out.println("some OpenGL error: " + gl.glGetError());
+            if (gl.glGetError() > 0) {
+                System.out.println("some OpenGL error: " + gl.glGetError());
+            }
         }
     }
 }
