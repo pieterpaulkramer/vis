@@ -44,18 +44,8 @@ public class OpacityFunction {
        
 
         ControlPoint cp = new ControlPoint(value, width);
-        int idx = 0;
-        while (idx < controlPoints.size() && controlPoints.get(idx).compareTo(cp) < 0) {
-            idx++;
-        }
-
-
-        if (controlPoints.get(idx).compareTo(cp) == 0) {
-            controlPoints.set(idx, cp);
-        } else {
-            controlPoints.add(idx, cp);
-        }
-        return idx;
+        controlPoints.add(cp);
+        return controlPoints.size()-1;
     }
 
     public void removeControlPoint(int idx) {

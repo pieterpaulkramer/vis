@@ -31,7 +31,7 @@ public class VolVisApplication extends javax.swing.JFrame {
         initComponents();
         this.setTitle("Volume visualization");
         
-        // Create a new visualization for the OpenGL panel
+       // Create a new visualization for the OpenGL panel
         GLCanvas glCanvas = new GLCanvas();
         renderPanel.setLayout(new BorderLayout());
         renderPanel.add(glCanvas, BorderLayout.CENTER);
@@ -136,6 +136,7 @@ public class VolVisApplication extends javax.swing.JFrame {
     private void loadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadButtonActionPerformed
         // TODO add your handling code here:
         JFileChooser fc = new JFileChooser();
+        fc.setCurrentDirectory(new File("../vis/set2_data/"));
         fc.setFileFilter(new FileFilter() {
 
             @Override

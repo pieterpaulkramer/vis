@@ -33,11 +33,11 @@ public class OpacityWeightEditor extends javax.swing.JPanel {
         histogramPanel.add(ofView, BorderLayout.CENTER);
     }
 
-    public void setSelectedInfo(int idx, int s, double a, TFColor c) {
+    public void setSelectedInfo(int idx, int s, int w) {
         selected = idx;
         scalarTextField.setText(Integer.toString(s));
-        opacityTextField.setText(String.format("%.2f", a));
-        colorButton.setBackground(new Color((float) c.r, (float) c.g, (float) c.b));
+        opacityTextField.setText(Integer.toString(w));
+        //colorButton.setBackground(new Color((float) c.r, (float) c.g, (float) c.b));
     }
 
     /**
@@ -74,13 +74,12 @@ public class OpacityWeightEditor extends javax.swing.JPanel {
 
         jLabel1.setText("Scalar value");
 
-        jLabel2.setText("Opacity");
+        jLabel2.setText("Width:");
 
         jLabel3.setText("Color");
 
         scalarTextField.setEditable(false);
         scalarTextField.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        scalarTextField.setFocusTraversalKeysEnabled(false);
         scalarTextField.setFocusable(false);
         scalarTextField.setMaximumSize(new java.awt.Dimension(84, 28));
         scalarTextField.setMinimumSize(new java.awt.Dimension(84, 28));
@@ -88,7 +87,6 @@ public class OpacityWeightEditor extends javax.swing.JPanel {
         opacityTextField.setEditable(false);
         opacityTextField.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         opacityTextField.setToolTipText("");
-        opacityTextField.setFocusTraversalKeysEnabled(false);
         opacityTextField.setFocusable(false);
         opacityTextField.setMaximumSize(new java.awt.Dimension(84, 28));
         opacityTextField.setMinimumSize(new java.awt.Dimension(84, 28));
