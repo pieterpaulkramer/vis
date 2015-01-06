@@ -30,7 +30,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     private int resolution = 5;
     private boolean trilinint = false;
     private Volume volume = null;
-    private final List<int[]> values = new ArrayList<int[]>();
+    private OpacityFunction oFunc;
     RaycastRendererPanel panel;
     TransferFunction tFunc;
     TransferFunctionEditor tfEditor;
@@ -67,7 +67,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         }
         image = new BufferedImage(imageSize, imageSize, BufferedImage.TYPE_INT_ARGB);
         tFunc = new TransferFunction(volume.getMinimum(), volume.getMaximum());
+        oFunc = new OpacityFunction(volume.getMinimum(), volume.getMaximum());
         tFunc.addTFChangeListener(this);
+        oFunc.addTFChangeListener(this);
         tfEditor = new TransferFunctionEditor(tFunc, volume.getHistogram());
         panel.setTransferFunctionEditor(tfEditor);
 
@@ -221,16 +223,16 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         return 1 - res;
     }
 
-    private double computeMultiAlphaLevel(double x, double y, double z, List<int[]> fvnrs) {
+    private double computeMultiAlphaLevel(double x, double y, double z) {
         double res = 1;
-        for (int i = 0; i < fvnrs.size(); i++) {
-            res *= (1 - computeSingleAlphaLevel(x, y, z, fvnrs.get(i)[0], fvnrs.get(i)[1]));
+        for (int i = 0; i < oFunc.getControlPoints().size(); i++) {
+            res *= (1 - computeSingleAlphaLevel(x, y, z, oFunc.getControlPoints().get(i).value, oFunc.getControlPoints().get(i).width));
         }
         return 1 - res;
     }
 
-    private double computeMultiAlphaLevel(double[] coord, List<int[]> fvnrs) {
-        return computeMultiAlphaLevel(coord[0], coord[1], coord[2], fvnrs);
+    private double computeMultiAlphaLevel(double[] coord) {
+        return computeMultiAlphaLevel(coord[0], coord[1], coord[2]);
     }
 
     private TFColor computeColor(double[] coord, double[] viewvec) {
@@ -303,7 +305,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 TFColor color = new TFColor();
                 for (double[] coord : ray) {
                     TFColor cur = computeColor(coord, viewvec);
-                    double a = computeMultiAlphaLevel(coord, values);
+                    double a = computeMultiAlphaLevel(coord);
                     cur.a = a;
                     color.layer(cur);
                 }
