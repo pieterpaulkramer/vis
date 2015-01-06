@@ -37,6 +37,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
 
     public RenderingController() {
         tFuncPanel = new RaycastRendererPanel(this);
+        oWeightPanel = new OpacityWeightPanel(this);
         tFuncPanel.setSpeedLabel("0");
     }
 
