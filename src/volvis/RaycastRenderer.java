@@ -27,18 +27,19 @@ public class RaycastRenderer {
     private int resolution;
     private boolean trilinint;
     private Volume volume;
-    private final List<int[]> values = new ArrayList<int[]>();
     private TransferFunction tFunc;
+    private OpacityFunction oFunc;
     private BufferedImage image;
     private double[] viewMatrix = new double[4 * 4];
     private boolean computationRunning;
 
-    public RaycastRenderer(int mode, int resolution, boolean trilinint, Volume vol, TransferFunction tFunc) {
+    public RaycastRenderer(int mode, int resolution, boolean trilinint, Volume vol, TransferFunction tFunc, OpacityFunction oFunc) {
         this.mode = mode;
         this.resolution = resolution;
         this.trilinint = trilinint;
         this.volume = vol;
         this.tFunc = tFunc;
+        this.oFunc = oFunc;
 
         // set up image for storing the resulting rendering
         // the image width and height are equal to the length of the volume diagonal
@@ -178,26 +179,19 @@ public class RaycastRenderer {
             return 0;
         }
     }
+
     
-    private double computeMultiAlphaLevel(double x, double y, double z, int[] rs, int[] fvs) {
+    private double computeMultiAlphaLevel(double x, double y, double z) {
         double res = 1;
-        for(int i = 0; i < rs.length;i++)
-        {
-            res *= (1-computeSingleAlphaLevel(x, y, z, rs[i], fvs[i]));
+        for(int i = 0; i < oFunc.getControlPoints().size();i++) {
+            res *= (1-computeSingleAlphaLevel(x, y, z, oFunc.getControlPoints().get(i).value, oFunc.getControlPoints().get(i).width));
         }
         return 1-res;
     }
     
-    private double computeMultiAlphaLevel(double x, double y, double z, List<int[]> fvnrs) {
-        double res = 1;
-        for(int i = 0; i < fvnrs.size();i++) {
-            res *= (1-computeSingleAlphaLevel(x, y, z, fvnrs.get(i)[0], fvnrs.get(i)[1]));
-        }
-        return 1-res;
-    }
-    
-    private double computeMultiAlphaLevel(double[] coord, List<int[]> fvnrs) {
-        return computeMultiAlphaLevel(coord[0],coord[1],coord[2],fvnrs);
+    private double computeMultiAlphaLevel(double[] xyz)
+    {
+        return computeMultiAlphaLevel(xyz[0],xyz[1],xyz[2]);
     }
 
     private TFColor computeColor(double[][] ray) {
@@ -222,7 +216,7 @@ public class RaycastRenderer {
                TFColor color = new TFColor();
                 for (double[] coord:ray) {
                     TFColor cur = tFunc.getColor(getVoxel(coord));
-                    double a = computeMultiAlphaLevel(coord, values);
+                    double a = computeMultiAlphaLevel(coord);
                     cur.a=a;
                     color.layer(cur);
                 }

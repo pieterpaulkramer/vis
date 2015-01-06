@@ -41,7 +41,8 @@ public class VolVisApplication extends javax.swing.JFrame {
         renderController = new RenderingController();
         visualization.addRenderer(renderController);
         renderController.addTFChangeListener(visualization);
-        tabbedPanel.addTab("Raycaster", renderController.getPanel());
+        tabbedPanel.addTab("Raycaster", renderController.getTFuncPanel());
+        tabbedPanel.addTab("Opacity Weighter",renderController.getOWeightPanel());
         //*/
     }
 
