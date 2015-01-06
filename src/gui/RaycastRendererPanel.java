@@ -8,6 +8,7 @@ import java.awt.BorderLayout;
 import java.util.HashMap;
 import java.util.Map;
 import volvis.RaycastRenderer;
+import volvis.RenderingController;
 
 /**
  *
@@ -22,15 +23,15 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
         SELECTION_MAP.put("Opacity weighting", RaycastRenderer.OPACITYWEIGHTING);
     }
 
-    RaycastRenderer renderer;
+    RenderingController renderController;
     TransferFunctionEditor tfEditor;
     
     /**
      * Creates new form RaycastRendererPanel
      */
-    public RaycastRendererPanel(RaycastRenderer renderer) {
+    public RaycastRendererPanel(RenderingController renderer) {
         initComponents();
-        this.renderer = renderer;
+        this.renderController = renderer;
         this.tfPanel.setLayout(new BorderLayout());
     }
 
@@ -154,15 +155,15 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
     private void jComboBox1ItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboBox1ItemStateChanged
         String s = (String)jComboBox1.getSelectedItem();
         int mode = SELECTION_MAP.get(s);
-        renderer.setMode(mode);
+        renderController.setMode(mode);
     }//GEN-LAST:event_jComboBox1ItemStateChanged
 
     private void jSpinner1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jSpinner1StateChanged
-        renderer.setResolution((Integer)jSpinner1.getValue());
+        renderController.setResolution((Integer)jSpinner1.getValue());
     }//GEN-LAST:event_jSpinner1StateChanged
 
     private void jCheckBox1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jCheckBox1StateChanged
-        renderer.setTriLinInt(jCheckBox1.isSelected());
+        renderController.setTriLinInt(jCheckBox1.isSelected());
     }//GEN-LAST:event_jCheckBox1StateChanged
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
