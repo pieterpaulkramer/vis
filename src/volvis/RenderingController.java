@@ -9,9 +9,9 @@ import gui.OpacityWeightPanel;
 import gui.RaycastRendererPanel;
 import gui.TransferFunctionEditor;
 import java.awt.Component;
-import java.util.ArrayList;
-import java.util.List;
+import java.awt.image.BufferedImage;
 import javax.media.opengl.GL2;
+import util.ImageDrawer;
 import util.TFChangeListener;
 import volume.Volume;
 
@@ -25,19 +25,24 @@ public class RenderingController extends Renderer implements TFChangeListener {
     private int resolution = 1;
     private boolean trilinint = false;
     private Volume volume = null;
+    
     private RaycastRendererPanel tFuncPanel;
     private TransferFunction tFunc;
     private TransferFunctionEditor tfEditor;
+    
     private OpacityFunction oFunc;
     private OpacityWeightEditor owEditor;
     private OpacityWeightPanel oWeightPanel;
+    
     private RenderThread quickPreviewRenderer;
     private RenderThread slowPreviewRenderer;
     private RenderThread realRenderer;
+    
+    private ImageDrawer drawer;
 
     public RenderingController() {
         tFuncPanel = new RaycastRendererPanel(this);
-        tFuncPanel.setSpeedLabel("0");
+        oWeightPanel = new OpacityWeightPanel(this);
     }
 
     public void setMode(int mode) {
@@ -69,7 +74,6 @@ public class RenderingController extends Renderer implements TFChangeListener {
         
         owEditor = new OpacityWeightEditor(oFunc, volume.getHistogram());
         oWeightPanel.setOpacityWeightEditor(owEditor);
-
     }
 
     @Override
@@ -89,7 +93,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
     }
 
     @Override
-    public void visualize(GL2 gl) {
+    public void visualize(ImageDrawer drawer, GL2 gl) {
         stopRenderers();
         
         if (volume == null) {
@@ -97,15 +101,15 @@ public class RenderingController extends Renderer implements TFChangeListener {
         }
         
         if (resolution < 5) {
-            quickPreviewRenderer = new RenderThread(gl, mode, 5, trilinint, volume, tFunc,oFunc);
-            quickPreviewRenderer.doInBackground();
+            quickPreviewRenderer = new RenderThread(drawer, gl, mode, 5, trilinint, volume, tFunc, oFunc);
+            quickPreviewRenderer.execute();
         }
         if (resolution < 3) {
-            slowPreviewRenderer = new RenderThread(gl, mode, 3, trilinint, volume, tFunc,oFunc);
-            slowPreviewRenderer.doInBackground();
+            slowPreviewRenderer = new RenderThread(drawer, gl, mode, 3, trilinint, volume, tFunc, oFunc);
+          //  slowPreviewRenderer.execute();
         }
-        realRenderer = new RenderThread(gl, mode, resolution, trilinint, volume, tFunc,oFunc);
-        realRenderer.doInBackground();
+        realRenderer = new RenderThread(drawer, gl, mode, resolution, trilinint, volume, tFunc, oFunc);
+        //realRenderer.execute();
     }
     
     private void stopRenderers() {
@@ -115,5 +119,4 @@ public class RenderingController extends Renderer implements TFChangeListener {
             }
         }
     }
-
 }

@@ -4,12 +4,7 @@
  */
 package volvis;
 
-import com.jogamp.opengl.util.texture.Texture;
-import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.List;
-import javax.media.opengl.GL2;
 import util.VectorMath;
 import volume.Volume;
 
@@ -30,7 +25,6 @@ public class RaycastRenderer {
     private TransferFunction tFunc;
     private OpacityFunction oFunc;
     private BufferedImage image;
-    private double[] viewMatrix = new double[4 * 4];
     private boolean computationRunning;
 
     public RaycastRenderer(int mode, int resolution, boolean trilinint, Volume vol, TransferFunction tFunc, OpacityFunction oFunc) {
@@ -228,105 +222,13 @@ public class RaycastRenderer {
         }
     }
 
-    private void drawBoundingBox(GL2 gl) {
-        gl.glPushAttrib(GL2.GL_CURRENT_BIT);
-        gl.glDisable(GL2.GL_LIGHTING);
-        gl.glColor4d(1.0, 1.0, 1.0, 1.0);
-        gl.glLineWidth(1.5f);
-        gl.glEnable(GL2.GL_LINE_SMOOTH);
-        gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);
-        gl.glEnable(GL2.GL_BLEND);
-        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
-
-        gl.glBegin(GL2.GL_LINE_LOOP);
-        gl.glVertex3d(-volume.getDimX() / 2.0, -volume.getDimY() / 2.0, volume.getDimZ() / 2.0);
-        gl.glVertex3d(-volume.getDimX() / 2.0, volume.getDimY() / 2.0, volume.getDimZ() / 2.0);
-        gl.glVertex3d(volume.getDimX() / 2.0, volume.getDimY() / 2.0, volume.getDimZ() / 2.0);
-        gl.glVertex3d(volume.getDimX() / 2.0, -volume.getDimY() / 2.0, volume.getDimZ() / 2.0);
-        gl.glEnd();
-
-        gl.glBegin(GL2.GL_LINE_LOOP);
-        gl.glVertex3d(-volume.getDimX() / 2.0, -volume.getDimY() / 2.0, -volume.getDimZ() / 2.0);
-        gl.glVertex3d(-volume.getDimX() / 2.0, volume.getDimY() / 2.0, -volume.getDimZ() / 2.0);
-        gl.glVertex3d(volume.getDimX() / 2.0, volume.getDimY() / 2.0, -volume.getDimZ() / 2.0);
-        gl.glVertex3d(volume.getDimX() / 2.0, -volume.getDimY() / 2.0, -volume.getDimZ() / 2.0);
-        gl.glEnd();
-
-        gl.glBegin(GL2.GL_LINE_LOOP);
-        gl.glVertex3d(volume.getDimX() / 2.0, -volume.getDimY() / 2.0, -volume.getDimZ() / 2.0);
-        gl.glVertex3d(volume.getDimX() / 2.0, -volume.getDimY() / 2.0, volume.getDimZ() / 2.0);
-        gl.glVertex3d(volume.getDimX() / 2.0, volume.getDimY() / 2.0, volume.getDimZ() / 2.0);
-        gl.glVertex3d(volume.getDimX() / 2.0, volume.getDimY() / 2.0, -volume.getDimZ() / 2.0);
-        gl.glEnd();
-
-        gl.glBegin(GL2.GL_LINE_LOOP);
-        gl.glVertex3d(-volume.getDimX() / 2.0, -volume.getDimY() / 2.0, -volume.getDimZ() / 2.0);
-        gl.glVertex3d(-volume.getDimX() / 2.0, -volume.getDimY() / 2.0, volume.getDimZ() / 2.0);
-        gl.glVertex3d(-volume.getDimX() / 2.0, volume.getDimY() / 2.0, volume.getDimZ() / 2.0);
-        gl.glVertex3d(-volume.getDimX() / 2.0, volume.getDimY() / 2.0, -volume.getDimZ() / 2.0);
-        gl.glEnd();
-
-        gl.glBegin(GL2.GL_LINE_LOOP);
-        gl.glVertex3d(-volume.getDimX() / 2.0, volume.getDimY() / 2.0, -volume.getDimZ() / 2.0);
-        gl.glVertex3d(-volume.getDimX() / 2.0, volume.getDimY() / 2.0, volume.getDimZ() / 2.0);
-        gl.glVertex3d(volume.getDimX() / 2.0, volume.getDimY() / 2.0, volume.getDimZ() / 2.0);
-        gl.glVertex3d(volume.getDimX() / 2.0, volume.getDimY() / 2.0, -volume.getDimZ() / 2.0);
-        gl.glEnd();
-
-        gl.glBegin(GL2.GL_LINE_LOOP);
-        gl.glVertex3d(-volume.getDimX() / 2.0, -volume.getDimY() / 2.0, -volume.getDimZ() / 2.0);
-        gl.glVertex3d(-volume.getDimX() / 2.0, -volume.getDimY() / 2.0, volume.getDimZ() / 2.0);
-        gl.glVertex3d(volume.getDimX() / 2.0, -volume.getDimY() / 2.0, volume.getDimZ() / 2.0);
-        gl.glVertex3d(volume.getDimX() / 2.0, -volume.getDimY() / 2.0, -volume.getDimZ() / 2.0);
-        gl.glEnd();
-
-        gl.glDisable(GL2.GL_LINE_SMOOTH);
-        gl.glDisable(GL2.GL_BLEND);
-        gl.glEnable(GL2.GL_LIGHTING);
-        gl.glPopAttrib();
-    }
-
-    public void visualize(GL2 gl) {
-        drawBoundingBox(gl);
-
-        gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, viewMatrix, 0);
-
+    public BufferedImage visualize(double[] viewMatrix) {
         boolean slicerFinished = slicer(viewMatrix);
         
         if (slicerFinished) {
-            Texture texture = AWTTextureIO.newTexture(gl.getGLProfile(), image, false);
-
-            gl.glPushAttrib(GL2.GL_LIGHTING_BIT);
-            gl.glDisable(GL2.GL_LIGHTING);
-            gl.glEnable(GL2.GL_BLEND);
-            gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
-
-            // draw rendered image as a billboard texture
-            texture.enable(gl);
-            texture.bind(gl);
-            double halfWidth = image.getWidth() / 2.0;
-            gl.glPushMatrix();
-            gl.glLoadIdentity();
-            gl.glBegin(GL2.GL_QUADS);
-            gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-            gl.glTexCoord2d(0.0, 0.0);
-            gl.glVertex3d(-halfWidth, -halfWidth, 0.0);
-            gl.glTexCoord2d(0.0, 1.0);
-            gl.glVertex3d(-halfWidth, halfWidth, 0.0);
-            gl.glTexCoord2d(1.0, 1.0);
-            gl.glVertex3d(halfWidth, halfWidth, 0.0);
-            gl.glTexCoord2d(1.0, 0.0);
-            gl.glVertex3d(halfWidth, -halfWidth, 0.0);
-            gl.glEnd();
-            texture.disable(gl);
-            texture.destroy(gl);
-            gl.glPopMatrix();
-
-            gl.glPopAttrib();
-
-            if (gl.glGetError() > 0) {
-                System.out.println("some OpenGL error: " + gl.glGetError());
-            }
+            return image;
+        } else {
+            return null;
         }
     }
 }

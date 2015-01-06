@@ -7,6 +7,7 @@ package volvis;
 import java.util.ArrayList;
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
+import util.ImageDrawer;
 import util.TFChangeListener;
 
 /**
@@ -57,5 +58,5 @@ public abstract class Renderer {
         }
     }
     
-    public abstract void visualize(GL2 gl);
+    public abstract void visualize(ImageDrawer drawer, GL2 gl);
 }
