@@ -36,6 +36,12 @@ public class Visualization implements GLEventListener, TFChangeListener, ImageDr
     int winWidth, winHeight;
     double fov = 20.0;
     TrackballInteractor trackball;
+    
+    //TODO remove - voor laptop die geen GL kan
+    public Visualization() {
+        this.renderers = new ArrayList<Renderer>();
+        trackball = new TrackballInteractor(winWidth, winHeight);
+    }
         
     public Visualization(GLCanvas canvas) {
         this.renderers = new ArrayList<Renderer>();

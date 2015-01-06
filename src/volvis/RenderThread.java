@@ -7,6 +7,8 @@ package volvis;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.media.opengl.GL2;
 import javax.swing.SwingWorker;
@@ -20,6 +22,7 @@ public class RenderThread extends SwingWorker {
     private int resolution;
     private Volume vol;
     private ImageDrawer drawer;
+    private BufferedImage image;
     
     private boolean stopped = false;
     
@@ -31,6 +34,8 @@ public class RenderThread extends SwingWorker {
         this.resolution = resolution;
         this.drawer = drawer;
     }
+    
+    
 
     @Override
     public Object doInBackground() throws IOException {
@@ -38,21 +43,28 @@ public class RenderThread extends SwingWorker {
         
         double[] viewMatrix = new double[4 * 4];
         gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, viewMatrix, 0);
-        
-        BufferedImage image = renderer.visualize(viewMatrix);        
+        image = renderer.visualize(viewMatrix);        
+        return null;
+    }
+
+    @Override
+    protected void done() {
         if (image != null && !stopped) {
             String filename = "image" + System.currentTimeMillis()+".jpg";
             File f = new File(filename);
-            ImageIO.write(image, "jpg", f);
+            try {
+                ImageIO.write(image, "jpg", f);
+            } catch (IOException ex) {
+                Logger.getLogger(RenderThread.class.getName()).log(Level.SEVERE, null, ex);
+            }
             
             System.out.println("Drawing renderer for thread "+resolution);
             drawer.draw(gl, image, vol);
         }
-        
         System.out.println("Finished renderer for thread "+resolution);
-        
-        return null;
     }
+    
+    
     
     public void stop() {
         System.out.println("Stopping renderer for thread "+resolution);

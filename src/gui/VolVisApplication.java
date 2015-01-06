@@ -34,8 +34,8 @@ public class VolVisApplication extends javax.swing.JFrame {
        // Create a new visualization for the OpenGL panel
         GLCanvas glCanvas = new GLCanvas();
         renderPanel.setLayout(new BorderLayout());
-        renderPanel.add(glCanvas, BorderLayout.CENTER);
         visualization = new Visualization(glCanvas);
+        renderPanel.add(glCanvas, BorderLayout.CENTER);
         glCanvas.addGLEventListener(visualization);
 
         renderController = new RenderingController();
