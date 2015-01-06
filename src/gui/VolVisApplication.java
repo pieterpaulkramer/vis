@@ -31,16 +31,16 @@ public class VolVisApplication extends javax.swing.JFrame {
         initComponents();
         this.setTitle("Volume visualization");
         
-        // Create a new visualization for the OpenGL panel
-        //GLCanvas glCanvas = new GLCanvas();
-        //renderPanel.setLayout(new BorderLayout());
-        //renderPanel.add(glCanvas, BorderLayout.CENTER);
-        //visualization = new Visualization(glCanvas);
-        //glCanvas.addGLEventListener(visualization);
+       // Create a new visualization for the OpenGL panel
+        GLCanvas glCanvas = new GLCanvas();
+        renderPanel.setLayout(new BorderLayout());
+        renderPanel.add(glCanvas, BorderLayout.CENTER);
+        visualization = new Visualization(glCanvas);
+        glCanvas.addGLEventListener(visualization);
 
         renderController = new RenderingController();
-        //visualization.addRenderer(renderController);
-        //renderController.addTFChangeListener(visualization);
+        visualization.addRenderer(renderController);
+        renderController.addTFChangeListener(visualization);
         tabbedPanel.addTab("Raycaster", renderController.getTFuncPanel());
         tabbedPanel.addTab("Opacity Weighter",renderController.getOWeightPanel());
         //*/
