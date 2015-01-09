@@ -39,7 +39,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
     private OpacityWeightEditor owEditor;
     private OpacityWeightPanel oWeightPanel;
     
-    private RenderThread realRenderer;
+    private RenderThread threadedRenderer;
 
     private ImageDrawer drawer;
 
@@ -106,19 +106,27 @@ public class RenderingController extends Renderer implements TFChangeListener {
             return;
         }
         
-        realRenderer = new RenderThread(this, viewMatrix, renderingId, mode, resolution, trilinint, volume, tFunc, oFunc);
-        realRenderer.execute();
-        
         if (resolution < 5) {
+            threadedRenderer = new RenderThread(this, viewMatrix, renderingId, mode, resolution, trilinint, volume, tFunc, oFunc);
+            threadedRenderer.execute();
+            
             RaycastRenderer localRenderer = new RaycastRenderer(mode, 5, trilinint, volume, tFunc, oFunc);
             BufferedImage image = localRenderer.visualize(viewMatrix);
             drawer.renderingDone(new RenderResult(renderingId, image, volume, resolution));
+        } else {
+            RaycastRenderer localRenderer = new RaycastRenderer(mode, 5, trilinint, volume, tFunc, oFunc);
+            
+            long startedRendering = System.currentTimeMillis();
+            BufferedImage image = localRenderer.visualize(viewMatrix);
+            long renderTime = System.currentTimeMillis() - startedRendering;
+            
+            renderingDone(new RenderResult(renderingId, image, volume, resolution), renderTime);
         }
     }
     
     private void stopRenderer() {
-        if (realRenderer != null && realRenderer.getState() == StateValue.STARTED) {
-            realRenderer.stop();
+        if (threadedRenderer != null && threadedRenderer.getState() == StateValue.STARTED) {
+            threadedRenderer.stop();
         }
     }
 

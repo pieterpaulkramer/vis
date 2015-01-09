@@ -6,8 +6,6 @@ package volvis;
 
 import datatypes.RenderResult;
 import java.awt.image.BufferedImage;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.SwingWorker;
 import volume.Volume;
 
