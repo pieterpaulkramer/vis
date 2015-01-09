@@ -52,16 +52,19 @@ public class RenderingController extends Renderer implements TFChangeListener {
     }
 
     public void setMode(int mode) {
+        if(this.mode==mode)return;
         this.mode = mode;
         changed();
     }
 
     public void setResolution(int res) {
+        if(this.resolution==res)return;
         this.resolution = res;
         changed();
     }
 
     public void setTriLinInt(boolean b) {
+        if(this.trilinint==b)return;
         this.trilinint = b;
         changed();
     }

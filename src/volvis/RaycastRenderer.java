@@ -139,7 +139,7 @@ public class RaycastRenderer {
     }
 
     private double[][] CastRay(double[] uVec, int i, int imageCenter, double[] vVec, int j, double[] volumeCenter, double[] viewVec) {
-        int samples = 256;
+        int samples = (int)Math.ceil(VectorMath.length(new double[]{volume.getDimX(),volume.getDimY(),volume.getDimZ()}));
         double[][] pixelcoords = new double[samples][3];
         for (int k = -samples / 2; k < samples / 2; k++) {
             int index = k + samples / 2;
@@ -164,6 +164,7 @@ public class RaycastRenderer {
     private double computeSingleAlphaLevel(double x, double y, double z, int r, int fv) {
         double[] grad = lGradientVector(x, y, z);
         double gradl = VectorMath.length(grad);
+        gradl = 1;
         int val = getVoxel(x, y, z);
         if (val == fv && gradl == 0) {
             return 1;
@@ -178,7 +179,7 @@ public class RaycastRenderer {
     private double computeMultiAlphaLevel(double x, double y, double z) {
         double res = 1;
         for(int i = 0; i < oFunc.getControlPoints().size();i++) {
-            res *= (1-computeSingleAlphaLevel(x, y, z, oFunc.getControlPoints().get(i).value, oFunc.getControlPoints().get(i).width));
+            res *= (1-computeSingleAlphaLevel(x, y, z, oFunc.getControlPoints().get(i).width, oFunc.getControlPoints().get(i).value));
         }
         return 1-res;
     }
