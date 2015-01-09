@@ -6,13 +6,9 @@ package volvis;
 
 import datatypes.RenderResult;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 import javax.swing.SwingWorker;
-import util.ImageDrawer;
 import volume.Volume;
 
 public class RenderThread extends SwingWorker {
@@ -22,33 +18,40 @@ public class RenderThread extends SwingWorker {
     private double[] viewMatrix;
     private int resolution;
     private Volume vol;
-    private ImageDrawer drawer;
-    private BufferedImage image;
+    private RenderingController controller;
     
     private boolean stopped = false;
     
-    public RenderThread(ImageDrawer drawer, double[] viewMatrix, long renderingId, int mode, int resolution, boolean trilinint, Volume vol, TransferFunction tFunc, OpacityFunction oFunc) {
+    public RenderThread(RenderingController controller, double[] viewMatrix, long renderingId, int mode, int resolution, boolean trilinint, Volume vol, TransferFunction tFunc, OpacityFunction oFunc) {
         renderer = new RaycastRenderer(mode, resolution, trilinint, vol, tFunc, oFunc);
         
         this.vol = vol;
         this.viewMatrix = viewMatrix;
         this.id = renderingId;
         this.resolution = resolution;
-        this.drawer = drawer;
+        this.controller = controller;
     }
 
     @Override
-    public Object doInBackground() throws IOException {
+    public Object doInBackground() {
+        long startedRunningAt = System.currentTimeMillis();
         BufferedImage image = renderer.visualize(viewMatrix);        
+        long renderTime = System.currentTimeMillis() - startedRunningAt;
         
         if (image != null && !stopped) {
-            drawer.renderingDone(new RenderResult(id, image, vol, resolution));
+            controller.renderingDone(new RenderResult(id, image, vol, resolution), renderTime);
         }
         
         return null;
     }
     
-    public synchronized void stop() {
+    /**
+     * Stops the renderer. It is guaranteed that when this method returns, the thread
+     * will not start any new operations, such as computing the value for the next
+     * pixel
+     */
+    public void stop() {
         renderer.stopSlicer();
+        stopped = true;
     }
 }

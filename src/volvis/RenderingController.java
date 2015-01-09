@@ -11,12 +11,10 @@ import gui.RaycastRendererPanel;
 import gui.TransferFunctionEditor;
 import java.awt.Component;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.media.opengl.GL2;
-import javax.swing.SwingWorker;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker.StateValue;
 import util.ImageDrawer;
 import util.TFChangeListener;
@@ -41,15 +39,16 @@ public class RenderingController extends Renderer implements TFChangeListener {
     private OpacityWeightEditor owEditor;
     private OpacityWeightPanel oWeightPanel;
     
-    private RenderThread quickPreviewRenderer;
-    private RenderThread slowPreviewRenderer;
     private RenderThread realRenderer;
-    
+
     private ImageDrawer drawer;
 
-    public RenderingController() {
+    public RenderingController(ImageDrawer drawer) {
         tFuncPanel = new RaycastRendererPanel(this);
+        tFuncPanel.setSpeedLabel("");
+        
         oWeightPanel = new OpacityWeightPanel(this);
+        this.drawer = drawer;
     }
 
     public void setMode(int mode) {
@@ -100,14 +99,14 @@ public class RenderingController extends Renderer implements TFChangeListener {
     }
 
     @Override
-    public void visualize(ImageDrawer drawer, double[] viewMatrix, long renderingId) {
-        stopRenderers();
+    public void visualize(double[] viewMatrix, long renderingId) {
+        stopRenderer();
         
         if (volume == null) {
             return;
         }
         
-        realRenderer = new RenderThread(drawer, viewMatrix, renderingId, mode, resolution, trilinint, volume, tFunc, oFunc);
+        realRenderer = new RenderThread(this, viewMatrix, renderingId, mode, resolution, trilinint, volume, tFunc, oFunc);
         realRenderer.execute();
         
         if (resolution < 5) {
@@ -117,18 +116,21 @@ public class RenderingController extends Renderer implements TFChangeListener {
         }
     }
     
-    private void stopRenderers() {
-        for (RenderThread t: new RenderThread[] {quickPreviewRenderer, slowPreviewRenderer, realRenderer}) {
-            if (t != null && t.getState() == StateValue.STARTED) {
-                t.stop();
-                try {
-                    t.get();
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(RenderingController.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (ExecutionException ex) {
-                    Logger.getLogger(RenderingController.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+    private void stopRenderer() {
+        if (realRenderer != null && realRenderer.getState() == StateValue.STARTED) {
+            realRenderer.stop();
         }
+    }
+
+    void renderingDone(RenderResult renderResult, final long renderTime) {
+        drawer.renderingDone(renderResult);
+        
+        SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                tFuncPanel.setSpeedLabel(renderTime + "ms");
+            }
+        });
     }
 }

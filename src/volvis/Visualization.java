@@ -20,6 +20,7 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.awt.GLCanvas;
 import javax.media.opengl.glu.GLU;
+import javax.swing.SwingUtilities;
 import util.ImageDrawer;
 import util.TFChangeListener;
 import util.TrackballInteractor;
@@ -87,7 +88,7 @@ public class Visualization implements GLEventListener, TFChangeListener, ImageDr
             // call the visualize() methods of all subscribed renderers
             for (int i = 0; i < renderers.size(); i++) {
                 renderingId++;
-                renderers.get(i).visualize(this, viewMatrix, renderingId);
+                renderers.get(i).visualize(viewMatrix, renderingId);
             }
         }
     }
@@ -95,7 +96,14 @@ public class Visualization implements GLEventListener, TFChangeListener, ImageDr
     @Override
     public synchronized void renderingDone(RenderResult result) {
         imageBuffer = result;
-        canvas.repaint();
+        
+        SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                canvas.repaint();
+            }
+        });
     }
     
     public void draw(GL2 gl, BufferedImage image, Volume volume) {
