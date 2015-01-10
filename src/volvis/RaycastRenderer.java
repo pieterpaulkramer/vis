@@ -24,7 +24,8 @@ public class RaycastRenderer {
     private Volume volume;
     private TransferFunction tFunc;
     private OpacityFunction oFunc;
-    private BufferedImage image;
+    private int imageSize;
+    
     private boolean computationRunning;
 
     public RaycastRenderer(int mode, int resolution, boolean trilinint, Volume vol, TransferFunction tFunc, OpacityFunction oFunc) {
@@ -37,15 +38,15 @@ public class RaycastRenderer {
 
         // set up image for storing the resulting rendering
         // the image width and height are equal to the length of the volume diagonal
-        int imageSize = (int) Math.floor(Math.sqrt(vol.getDimX() * vol.getDimX() + vol.getDimY() * vol.getDimY() + vol.getDimZ() * vol.getDimZ()));
+        imageSize = (int) Math.floor(Math.sqrt(vol.getDimX() * vol.getDimX() + vol.getDimY() * vol.getDimY() + vol.getDimZ() * vol.getDimZ()));
         if (imageSize % 2 != 0) {
             imageSize = imageSize + 1;
         }
-        
-        image = new BufferedImage(imageSize, imageSize, BufferedImage.TYPE_INT_ARGB);
     }
 
-    private boolean slicer(double[] viewMatrix) {
+    private BufferedImage slicer(double[] viewMatrix) {
+        BufferedImage image = new BufferedImage(imageSize, imageSize, BufferedImage.TYPE_INT_ARGB);
+        
         // vector uVec and vVec define a plane through the origin, 
         // perpendicular to the view vector viewVec
         double[] viewVec = new double[3];
@@ -68,7 +69,7 @@ public class RaycastRenderer {
         for (int j = 0; j < image.getHeight() / resolution; j++) {
             for (int i = 0; i < image.getWidth() / resolution; i++) {
                 if (!computationRunning) {
-                    return false;
+                    return null;
                 }
                 
                 int castx = i * resolution + (resolution - 1) / 2;
@@ -90,7 +91,7 @@ public class RaycastRenderer {
             }
         }
 
-        return true;
+        return image;
     }
     
     void stopSlicer() {
@@ -224,12 +225,6 @@ public class RaycastRenderer {
     }
 
     public BufferedImage visualize(double[] viewMatrix) {
-        boolean slicerFinished = slicer(viewMatrix);
-        
-        if (slicerFinished) {
-            return image;
-        } else {
-            return null;
-        }
+        return slicer(viewMatrix);
     }
 }

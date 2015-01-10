@@ -4,10 +4,8 @@
  */
 package volvis;
 
+import datatypes.RenderResult;
 import java.util.ArrayList;
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2;
-import util.ImageDrawer;
 import util.TFChangeListener;
 
 /**
@@ -58,5 +56,5 @@ public abstract class Renderer {
         }
     }
     
-    public abstract void visualize(double[] viewMatrix, long renderingId);
+    public abstract RenderResult visualize(double[] viewMatrix, long renderingId);
 }

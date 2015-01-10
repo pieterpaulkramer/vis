@@ -102,11 +102,11 @@ public class RenderingController extends Renderer implements TFChangeListener {
     }
 
     @Override
-    public void visualize(double[] viewMatrix, long renderingId) {
+    public RenderResult visualize(double[] viewMatrix, long renderingId) {
         stopRenderer();
         
         if (volume == null) {
-            return;
+            return null;
         }
         
         if (resolution < 5) {
@@ -115,7 +115,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
             
             RaycastRenderer localRenderer = new RaycastRenderer(mode, 5, trilinint, volume, tFunc, oFunc);
             BufferedImage image = localRenderer.visualize(viewMatrix);
-            drawer.renderingDone(new RenderResult(renderingId, image, volume, resolution));
+            return new RenderResult(renderingId, image, volume, 5);
         } else {
             RaycastRenderer localRenderer = new RaycastRenderer(mode, 5, trilinint, volume, tFunc, oFunc);
             
@@ -123,7 +123,9 @@ public class RenderingController extends Renderer implements TFChangeListener {
             BufferedImage image = localRenderer.visualize(viewMatrix);
             long renderTime = System.currentTimeMillis() - startedRendering;
             
-            renderingDone(new RenderResult(renderingId, image, volume, resolution), renderTime);
+            updateRenderTimeLabel(renderTime);
+            
+            return new RenderResult(renderingId, image, volume, resolution);
         }
     }
     
@@ -135,7 +137,10 @@ public class RenderingController extends Renderer implements TFChangeListener {
 
     void renderingDone(RenderResult renderResult, final long renderTime) {
         drawer.renderingDone(renderResult);
-        
+        updateRenderTimeLabel(renderTime);
+    }
+    
+    void updateRenderTimeLabel(final long renderTime) {
         SwingUtilities.invokeLater(new Runnable() {
 
             @Override

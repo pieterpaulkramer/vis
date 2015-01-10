@@ -88,22 +88,31 @@ public class Visualization implements GLEventListener, TFChangeListener, ImageDr
             // call the visualize() methods of all subscribed renderers
             for (int i = 0; i < renderers.size(); i++) {
                 renderingId++;
-                renderers.get(i).visualize(viewMatrix, renderingId);
+                RenderResult rendering = renderers.get(i).visualize(viewMatrix, renderingId);
+                
+                if (rendering != null) {
+                    draw(gl, rendering.getImage(), rendering.getVolume());
+                }
             }
         }
     }
     
     @Override
-    public synchronized void renderingDone(RenderResult result) {
-        imageBuffer = result;
-        
+    public synchronized void renderingDone(final RenderResult result) {
         SwingUtilities.invokeLater(new Runnable() {
 
             @Override
             public void run() {
-                canvas.repaint();
+                processRenderResult(result);
             }
         });
+    }
+    
+    private void processRenderResult(RenderResult result) {
+        if (result.getId() == renderingId) {
+            imageBuffer = result;
+            canvas.repaint();
+        }
     }
     
     public void draw(GL2 gl, BufferedImage image, Volume volume) {
