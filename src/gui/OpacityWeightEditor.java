@@ -33,10 +33,10 @@ public class OpacityWeightEditor extends javax.swing.JPanel {
         histogramPanel.add(ofView, BorderLayout.CENTER);
     }
 
-    public void setSelectedInfo(int idx, int s, int w) {
+    public void setSelectedInfo(int idx, int s, double w) {
         selected = idx;
         scalarTextField.setText(Integer.toString(s));
-        opacityTextField.setText(Integer.toString(w));
+        opacityTextField.setText(String.format("%.2f", w));
         //colorButton.setBackground(new Color((float) c.r, (float) c.g, (float) c.b));
     }
 
@@ -52,11 +52,9 @@ public class OpacityWeightEditor extends javax.swing.JPanel {
         histogramPanel = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
         scalarTextField = new javax.swing.JTextField();
         opacityTextField = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
-        colorButton = new javax.swing.JButton();
         jPanel1 = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
@@ -76,8 +74,6 @@ public class OpacityWeightEditor extends javax.swing.JPanel {
 
         jLabel2.setText("Width:");
 
-        jLabel3.setText("Color");
-
         scalarTextField.setEditable(false);
         scalarTextField.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         scalarTextField.setFocusable(false);
@@ -93,18 +89,11 @@ public class OpacityWeightEditor extends javax.swing.JPanel {
 
         jLabel4.setText("Opacity");
 
-        colorButton.setText("    ");
-        colorButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                colorButtonActionPerformed(evt);
-            }
-        });
-
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 299, Short.MAX_VALUE)
+            .add(0, 278, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -126,14 +115,11 @@ public class OpacityWeightEditor extends javax.swing.JPanel {
                     .add(layout.createSequentialGroup()
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(jLabel1)
-                            .add(jLabel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 74, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(org.jdesktop.layout.GroupLayout.TRAILING, jLabel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 74, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(scalarTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
-                                .add(colorButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                                .add(opacityTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                            .add(opacityTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE)
+                            .add(scalarTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(jPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addContainerGap())
@@ -170,33 +156,16 @@ public class OpacityWeightEditor extends javax.swing.JPanel {
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                             .add(jLabel2)
-                            .add(opacityTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                            .add(jLabel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 22, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(colorButton)))
+                            .add(opacityTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                     .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(0, 46, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void colorButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_colorButtonActionPerformed
-
-      //  Color newColor = JColorChooser.showDialog(this, "Choose color", colorButton.getBackground());
-        //if (newColor != null) {
-          //  colorButton.setBackground(newColor);
-            //ofunc.updateControlPointColor(selected, newColor);
-           // ofunc.changed();
-         //   ofView.repaint();
-        //}
-
-    }//GEN-LAST:event_colorButtonActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton colorButton;
     private javax.swing.JPanel histogramPanel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;

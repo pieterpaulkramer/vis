@@ -75,21 +75,25 @@ public class OpacityWeightView extends javax.swing.JPanel {
         int xprev = -1;
         for (int i = 0; i < ofunc.getControlPoints().size(); i++) {
             int val = ofunc.getControlPoints().get(i).value;
-            int width = ofunc.getControlPoints().get(i).width;
+            double width = ofunc.getControlPoints().get(i).width;
+            double al = ofunc.getControlPoints().get(i).alphafactor;
             //System.out.println("s = " + s);
             double t1 = (double) (val - width - min) / (double) range;
             double t2 = (double) (val - min) / (double) range;
             double t3 = (double) (val + width - min) / (double) range;
+            
+            double hf = 1-al;
             //System.out.println("t = " + t);
             int xpos1 = (int) (t1 * w);
             int xpos2 = (int) (t2 * w);
             int xpos3 = (int) (t3 * w);
+            int ypos = (int) (hf*h);
             //System.out.println("x = " + xpos + "; y = " + ypos);
             g2.setColor(Color.black);
-            g2.fillOval(xpos2 - DOTSIZE / 2, 10-DOTSIZE/2, DOTSIZE, DOTSIZE);
+            g2.fillOval(xpos2 - DOTSIZE / 2, ypos-DOTSIZE/2, DOTSIZE, DOTSIZE);
 
-            g2.drawLine(xpos1, h, xpos2, 10);
-            g2.drawLine(xpos2, 10, xpos3, h);
+            g2.drawLine(xpos1, h, xpos2, ypos);
+            g2.drawLine(xpos2, ypos, xpos3, h);
             if (xprev > -1) {
                 g2.drawLine(xpos1, h, xprev, h);
             }
@@ -104,9 +108,10 @@ public class OpacityWeightView extends javax.swing.JPanel {
         int min = ofunc.getMinimum();
 
         int val = cp.value;
+        
         double t = (double) (val - min) / (double) range;
         int xpos = (int) (t * w);
-        int ypos = 10;
+        int ypos = (int)(h*(1-cp.alphafactor));
         Ellipse2D bounds = new Ellipse2D.Double(xpos - DOTSIZE / 2, ypos - DOTSIZE / 2, DOTSIZE, DOTSIZE);
         return bounds;
     }
@@ -143,18 +148,21 @@ public class OpacityWeightView extends javax.swing.JPanel {
             }
 
             double w = getWidth();
+            double h = getHeight();
             int range = ofunc.getMaximum() - ofunc.getMinimum();
             int min = ofunc.getMinimum();
+            double na = 1d-dragEnd.y/h;
             double t = dragEnd.x / w;
-            int s = (int) ((t * range) + min);
+            double s = ((t * range) + min);
             if (SwingUtilities.isLeftMouseButton(e)) {
-                ofunc.updateControlPointScalar(selected, s);
-                int wid = ofunc.getControlPoints().get(selected).width;
-                editor.setSelectedInfo(selected, s,wid);
+                ofunc.updateControlPointScalar(selected, (int)s);
+                ofunc.updateControlPointAlpha(selected, na);
+                double wid = ofunc.getControlPoints().get(selected).width;
+                editor.setSelectedInfo(selected, (int)s,wid);
             } else if (SwingUtilities.isMiddleMouseButton(e)) {
-                ofunc.updateControlPointWidth(selected, Math.abs(s - ofunc.getControlPoints().get(selected).value));
+                ofunc.updateControlPointWidth(selected, Math.abs(s - ofunc.getControlPoints().get(selected).value)/10d);
                 int val = ofunc.getControlPoints().get(selected).value;
-                int wid = ofunc.getControlPoints().get(selected).width;
+                double wid = ofunc.getControlPoints().get(selected).width;
                 editor.setSelectedInfo(selected, val,wid);
             }
              
@@ -203,7 +211,7 @@ public class OpacityWeightView extends javax.swing.JPanel {
                     //System.out.println("s = " + s);
                     double a = (h - pos.y) / h;
                     //System.out.println("a = " + a);
-                    selected = ofunc.addControlPoint(s, 1);
+                    selected = ofunc.addControlPoint(s, 1,0.9d);
                     OpacityFunction.ControlPoint cp = controlPoints.get(selected);
                     editor.setSelectedInfo(selected, cp.value, cp.width);
                     dragStart = e.getPoint();

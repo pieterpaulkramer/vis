@@ -86,7 +86,7 @@ public class VolVisApplication extends javax.swing.JFrame {
                     .addComponent(jScrollPane1)
                     .addGroup(loadVolumeLayout.createSequentialGroup()
                         .addComponent(loadButton)
-                        .addGap(0, 265, Short.MAX_VALUE)))
+                        .addGap(0, 264, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         loadVolumeLayout.setVerticalGroup(
@@ -95,7 +95,7 @@ public class VolVisApplication extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(loadButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 421, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 492, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -107,11 +107,11 @@ public class VolVisApplication extends javax.swing.JFrame {
         renderPanel.setLayout(renderPanelLayout);
         renderPanelLayout.setHorizontalGroup(
             renderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 598, Short.MAX_VALUE)
+            .addGap(0, 599, Short.MAX_VALUE)
         );
         renderPanelLayout.setVerticalGroup(
             renderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 520, Short.MAX_VALUE)
+            .addGap(0, 576, Short.MAX_VALUE)
         );
 
         splitPane.setLeftComponent(renderPanel);
@@ -126,7 +126,7 @@ public class VolVisApplication extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(splitPane, javax.swing.GroupLayout.DEFAULT_SIZE, 524, Short.MAX_VALUE)
+            .addComponent(splitPane, javax.swing.GroupLayout.DEFAULT_SIZE, 578, Short.MAX_VALUE)
         );
 
         pack();

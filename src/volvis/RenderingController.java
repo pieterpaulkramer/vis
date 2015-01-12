@@ -40,6 +40,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
     private OpacityWeightPanel oWeightPanel;
     
     private RenderThread threadedRenderer;
+    private double[][][] maintainedAlphas;
 
     private ImageDrawer drawer;
 
@@ -80,6 +81,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
         
         oFunc = new OpacityFunction(volume.getMinimum(), volume.getMaximum());
         oFunc.addTFChangeListener(this);
+        oFunc.addOpChangeListener(this);
         
         owEditor = new OpacityWeightEditor(oFunc, volume.getHistogram());
         oWeightPanel.setOpacityWeightEditor(owEditor);
@@ -110,14 +112,14 @@ public class RenderingController extends Renderer implements TFChangeListener {
         }
         
         if (resolution < 5) {
-            threadedRenderer = new RenderThread(this, viewMatrix, renderingId, mode, resolution, trilinint, volume, tFunc, oFunc);
+            threadedRenderer = new RenderThread(this, viewMatrix, renderingId, mode, resolution, trilinint, volume, tFunc, oFunc,maintainedAlphas);
             threadedRenderer.execute();
             
-            RaycastRenderer localRenderer = new RaycastRenderer(mode, 5, trilinint, volume, tFunc, oFunc);
+            RaycastRenderer localRenderer = new RaycastRenderer(mode, 5, trilinint, volume, tFunc, oFunc,maintainedAlphas);
             BufferedImage image = localRenderer.visualize(viewMatrix);
             return new RenderResult(renderingId, image, volume, 5);
         } else {
-            RaycastRenderer localRenderer = new RaycastRenderer(mode, 5, trilinint, volume, tFunc, oFunc);
+            RaycastRenderer localRenderer = new RaycastRenderer(mode, 5, trilinint, volume, tFunc, oFunc,maintainedAlphas);
             
             long startedRendering = System.currentTimeMillis();
             BufferedImage image = localRenderer.visualize(viewMatrix);
@@ -148,5 +150,9 @@ public class RenderingController extends Renderer implements TFChangeListener {
                 tFuncPanel.setSpeedLabel(renderTime + "ms");
             }
         });
+    }
+
+    void ochanged() {
+        this.maintainedAlphas = new RaycastRenderer(mode, 1, trilinint, volume, tFunc, oFunc,null).getAlphas();
     }
 }

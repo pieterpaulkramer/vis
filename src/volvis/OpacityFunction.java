@@ -15,6 +15,7 @@ import util.TFChangeListener;
 public class OpacityFunction {
 
     private ArrayList<TFChangeListener> listeners = new ArrayList<TFChangeListener>();
+    private RenderingController ofunclisterner;
 
     // Construct a default grey-scale transfer function over the scalar range min - max.
     // The opacity increases linearly from 0.0 to 1.0
@@ -37,13 +38,13 @@ public class OpacityFunction {
         return controlPoints;
     }
 
-    public int addControlPoint(int value, int width) {
+    public int addControlPoint(int value, double width, double alphaf) {
         if (value < sMin || value > sMax) {
             return -1;
         }
        
 
-        ControlPoint cp = new ControlPoint(value, width);
+        ControlPoint cp = new ControlPoint(value, width, alphaf);
         controlPoints.add(cp);
         return controlPoints.size()-1;
     }
@@ -55,8 +56,12 @@ public class OpacityFunction {
     public void updateControlPointScalar(int index, int s) {
         controlPoints.get(index).value = s;
     }
+    
+    public void updateControlPointAlpha(int index, double a) {
+        controlPoints.get(index).alphafactor = a;
+    }
 
-    public void updateControlPointWidth(int idx, int w) {
+    public void updateControlPointWidth(int idx, double w) {
         ControlPoint cp = controlPoints.get(idx);
         cp.width = w;
     }
@@ -70,9 +75,15 @@ public class OpacityFunction {
 
     // notify the change listeners
     public void changed() {
+        ofunclisterner.ochanged();
         for (int i = 0; i < listeners.size(); i++) {
             listeners.get(i).changed();
         }
+        
+    }
+
+    void addOpChangeListener(RenderingController aThis) {
+        this.ofunclisterner = aThis;
     }
 
 
@@ -80,11 +91,13 @@ public class OpacityFunction {
     public class ControlPoint implements Comparable<ControlPoint> {
 
         public int value;
-        public int width;
+        public double width;
+        public double alphafactor;
 
-        public ControlPoint(int v, int width) {
+        public ControlPoint(int v, double width,double alphafactor) {
             value = v;
             this.width = width;
+            this.alphafactor=alphafactor;
         }
 
         @Override
@@ -99,7 +112,6 @@ public class OpacityFunction {
     }
     private short sMin, sMax;
     private int sRange;
-    private TFColor[] LUT;
     private int LUTsize = 4095;
     private ArrayList<ControlPoint> controlPoints;
 }
