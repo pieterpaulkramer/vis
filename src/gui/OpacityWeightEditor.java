@@ -33,10 +33,11 @@ public class OpacityWeightEditor extends javax.swing.JPanel {
         histogramPanel.add(ofView, BorderLayout.CENTER);
     }
 
-    public void setSelectedInfo(int idx, int s, double w) {
+    public void setSelectedInfo(int idx, int s, double w,double a) {
         selected = idx;
         scalarTextField.setText(Integer.toString(s));
         opacityTextField.setText(String.format("%.2f", w));
+        opacityTextField1.setText(String.format("%.2f", a));
         //colorButton.setBackground(new Color((float) c.r, (float) c.g, (float) c.b));
     }
 
@@ -58,6 +59,8 @@ public class OpacityWeightEditor extends javax.swing.JPanel {
         jPanel1 = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        opacityTextField1 = new javax.swing.JTextField();
 
         org.jdesktop.layout.GroupLayout histogramPanelLayout = new org.jdesktop.layout.GroupLayout(histogramPanel);
         histogramPanel.setLayout(histogramPanelLayout);
@@ -105,6 +108,15 @@ public class OpacityWeightEditor extends javax.swing.JPanel {
 
         jLabel6.setText("<html>&uarr;</html>");
 
+        jLabel3.setText("Alpha factor:");
+
+        opacityTextField1.setEditable(false);
+        opacityTextField1.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        opacityTextField1.setToolTipText("");
+        opacityTextField1.setFocusable(false);
+        opacityTextField1.setMaximumSize(new java.awt.Dimension(84, 28));
+        opacityTextField1.setMinimumSize(new java.awt.Dimension(84, 28));
+
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -114,12 +126,18 @@ public class OpacityWeightEditor extends javax.swing.JPanel {
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(layout.createSequentialGroup()
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(jLabel1)
-                            .add(org.jdesktop.layout.GroupLayout.TRAILING, jLabel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 74, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                            .add(opacityTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE)
-                            .add(scalarTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .add(layout.createSequentialGroup()
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(jLabel1)
+                                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jLabel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 74, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                                    .add(opacityTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE)
+                                    .add(scalarTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .add(layout.createSequentialGroup()
+                                .add(jLabel3)
+                                .add(15, 15, 15)
+                                .add(opacityTextField1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE)))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(jPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addContainerGap())
@@ -132,7 +150,7 @@ public class OpacityWeightEditor extends javax.swing.JPanel {
                             .add(histogramPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .add(layout.createSequentialGroup()
                                 .add(6, 6, 6)
-                                .add(jLabel5)
+                                .add(jLabel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 420, Short.MAX_VALUE)
                                 .addContainerGap())))))
         );
         layout.setVerticalGroup(
@@ -156,7 +174,11 @@ public class OpacityWeightEditor extends javax.swing.JPanel {
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                             .add(jLabel2)
-                            .add(opacityTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                            .add(opacityTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                            .add(jLabel3)
+                            .add(opacityTextField1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                     .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(0, 46, Short.MAX_VALUE))
         );
@@ -166,11 +188,13 @@ public class OpacityWeightEditor extends javax.swing.JPanel {
     private javax.swing.JPanel histogramPanel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JTextField opacityTextField;
+    private javax.swing.JTextField opacityTextField1;
     private javax.swing.JTextField scalarTextField;
     // End of variables declaration//GEN-END:variables
 }

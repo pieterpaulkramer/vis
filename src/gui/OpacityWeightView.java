@@ -158,12 +158,12 @@ public class OpacityWeightView extends javax.swing.JPanel {
                 ofunc.updateControlPointScalar(selected, (int)s);
                 ofunc.updateControlPointAlpha(selected, na);
                 double wid = ofunc.getControlPoints().get(selected).width;
-                editor.setSelectedInfo(selected, (int)s,wid);
+                editor.setSelectedInfo(selected, (int)s,wid,na);
             } else if (SwingUtilities.isMiddleMouseButton(e)) {
                 ofunc.updateControlPointWidth(selected, Math.abs(s - ofunc.getControlPoints().get(selected).value)/10d);
                 int val = ofunc.getControlPoints().get(selected).value;
                 double wid = ofunc.getControlPoints().get(selected).width;
-                editor.setSelectedInfo(selected, val,wid);
+                editor.setSelectedInfo(selected, val,wid,na);
             }
              
             repaint();
@@ -191,7 +191,7 @@ public class OpacityWeightView extends javax.swing.JPanel {
                     selected = idx;
                     //System.out.println("selected: " + controlPoints.get(selected).toString());
                     OpacityFunction.ControlPoint cp = controlPoints.get(selected);
-                    editor.setSelectedInfo(selected, cp.value, cp.width);
+                    editor.setSelectedInfo(selected, cp.value, cp.width,cp.alphafactor);
                     dragStart = e.getPoint();
                 } else if (e.getButton() == MouseEvent.BUTTON3) {
                     
@@ -213,7 +213,7 @@ public class OpacityWeightView extends javax.swing.JPanel {
                     //System.out.println("a = " + a);
                     selected = ofunc.addControlPoint(s, 1,0.9d);
                     OpacityFunction.ControlPoint cp = controlPoints.get(selected);
-                    editor.setSelectedInfo(selected, cp.value, cp.width);
+                    editor.setSelectedInfo(selected, cp.value, cp.width,cp.alphafactor);
                     dragStart = e.getPoint();
                     repaint();
                 }
