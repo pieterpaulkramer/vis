@@ -20,8 +20,8 @@ public class RenderThread extends SwingWorker {
     
     private boolean stopped = false;
     
-    public RenderThread(RenderingController controller, double[] viewMatrix, long renderingId, int mode, int resolution, boolean trilinint, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, double[][][] alphas) {
-        renderer = new RaycastRenderer(mode, resolution, trilinint, vol, tFunc, oFunc,alphas);
+    public RenderThread(RenderingController controller, double[] viewMatrix, long renderingId, int mode, int resolution, int intmode, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, double[][][] alphas) {
+        renderer = new RaycastRenderer(mode, resolution, intmode, vol, tFunc, oFunc,alphas);
         
         this.vol = vol;
         this.viewMatrix = viewMatrix;

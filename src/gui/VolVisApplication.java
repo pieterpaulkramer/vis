@@ -86,7 +86,7 @@ public class VolVisApplication extends javax.swing.JFrame {
                     .addComponent(jScrollPane1)
                     .addGroup(loadVolumeLayout.createSequentialGroup()
                         .addComponent(loadButton)
-                        .addGap(0, 264, Short.MAX_VALUE)))
+                        .addGap(0, 328, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         loadVolumeLayout.setVerticalGroup(
@@ -126,7 +126,7 @@ public class VolVisApplication extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(splitPane, javax.swing.GroupLayout.DEFAULT_SIZE, 578, Short.MAX_VALUE)
+            .addComponent(splitPane)
         );
 
         pack();

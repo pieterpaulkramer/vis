@@ -4,7 +4,14 @@
  */
 package volvis;
 
+import datatypes.CubicInterpolator;
+import datatypes.Grid;
+import datatypes.Interpolator;
+import datatypes.LinearInterpolator;
+import datatypes.NearestNeighbourInterpolator;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
+import java.util.HashMap;
 import util.VectorMath;
 import volume.Volume;
 
@@ -17,10 +24,17 @@ public class RaycastRenderer {
     public final static int MIP = 723623796;
     public final static int COMPOSITING = 267673489;
     public final static int OPACITYWEIGHTING = 234624534;
+    
+    private final static HashMap<Integer,Interpolator> INTERPOLATORS = new HashMap<Integer,Interpolator>();
+    static{
+        INTERPOLATORS.put(Interpolator.NEARESTNEIGHBOUR, new NearestNeighbourInterpolator());
+        INTERPOLATORS.put(Interpolator.LINEAR, new LinearInterpolator());
+        INTERPOLATORS.put(Interpolator.CUBIC, new CubicInterpolator());
+    }
 
+    private int intmode;
     private int mode;
     private int resolution;
-    private boolean trilinint;
     private Volume volume;
     private TransferFunction tFunc;
     private OpacityFunction oFunc;
@@ -29,19 +43,18 @@ public class RaycastRenderer {
 
     private boolean computationRunning;
 
-    public RaycastRenderer(int mode, int resolution, boolean trilinint, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, double[][][] alphas) {
+    public RaycastRenderer(int mode, int resolution, int intmode, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, double[][][] alphas) {
         this.mode = mode;
         this.resolution = resolution;
-        this.trilinint = trilinint;
+        this.intmode = intmode;
         this.volume = vol;
         this.tFunc = tFunc;
         this.oFunc = oFunc;
         if (alphas == null) {
             this.alphas = new double[vol.getDimX()][vol.getDimY()][vol.getDimZ()];
             computeAllAlphas();
-        }else
-        {
-            this.alphas=alphas;
+        } else {
+            this.alphas = alphas;
         }
 
         // set up image for storing the resulting rendering
@@ -112,46 +125,30 @@ public class RaycastRenderer {
 
     // get a voxel from the volume data by nearest neighbor interpolation
     private short getVoxel(double[] coord) {
-        if (!trilinint) {// for now there is no noticeable diffrence between NN and TL inerpolation, so we choos NN due to it being faster.
-            int x = (int) Math.round(coord[0]);
-            int y = (int) Math.round(coord[1]);
-            int z = (int) Math.round(coord[2]);
 
-            if ((x >= 0) && (x < volume.getDimX()) && (y >= 0) && (y < volume.getDimY()) && (z >= 0) && (z < volume.getDimZ())) {
-                return volume.getVoxel(x, y, z);
-            } else {
-                return 0;
+        Grid g = new Grid() {
+
+            @Override
+            public double getValue(int x, int y, int z) {
+                if ((x >= 0) && (x < volume.getDimX()) && (y >= 0) && (y < volume.getDimY()) && (z >= 0) && (z < volume.getDimZ())) {
+                    return volume.getVoxel(x, y, z);
+                } else {
+                    return 0;
+                }
             }
-        } else {//trilinear interpolation
-            int x1 = (int) Math.floor(coord[0]);
-            int y1 = (int) Math.floor(coord[1]);
-            int z1 = (int) Math.floor(coord[2]);
-
-            if ((x1 >= 0) && (x1 < volume.getDimX() - 1) && (y1 >= 0) && (y1 < volume.getDimY() - 1) && (z1 >= 0) && (z1 < volume.getDimZ() - 1)) {
-                double xf = coord[0] - x1;
-                double yf = coord[1] - y1;
-                double zf = coord[2] - z1;
-                double value = 0;
-                value += volume.getVoxel(x1, y1, z1) * (1d - xf) * (1d - yf) * (1d - zf);
-                value += volume.getVoxel(x1 + 1, y1, z1) * (xf) * (1d - yf) * (1d - zf);
-                value += volume.getVoxel(x1, y1 + 1, z1) * (1d - xf) * (yf) * (1d - zf);
-                value += volume.getVoxel(x1 + 1, y1 + 1, z1) * (xf) * (yf) * (1d - zf);
-                value += volume.getVoxel(x1, y1, z1 + 1) * (1d - xf) * (1d - yf) * (zf);
-                value += volume.getVoxel(x1 + 1, y1, z1 + 1) * (xf) * (1d - yf) * (zf);
-                value += volume.getVoxel(x1, y1 + 1, z1 + 1) * (1d - xf) * (yf) * (zf);
-                value += volume.getVoxel(x1 + 1, y1 + 1, z1 + 1) * (xf) * (yf) * (zf);
-                return (short) Math.round(value);
-            }
-
-            return 0;
-        }
+        };
+        Interpolator i = INTERPOLATORS.get(intmode);
+        i.setGrid(g);
+        short x =(short) i.getValue(coord[0], coord[1], coord[2]);
+        short m = (short)tFunc.getMaximum();
+        return x<0?0:(x>m?m:x);
     }
 
     private short getVoxel(double x, double y, double z) {
         return getVoxel(new double[]{x, y, z});
     }
 
-    private double[][] CastRay(double[] uVec, int i, int imageCenter, double[] vVec, int j, double[] volumeCenter, double[] viewVec) {
+    private double[][] CastRay(double[] uVec, double i, int imageCenter, double[] vVec, double j, double[] volumeCenter, double[] viewVec) {
         int samples = (int) Math.ceil(VectorMath.length(new double[]{volume.getDimX(), volume.getDimY(), volume.getDimZ()}));
         double[][] pixelcoords = new double[samples][3];
         for (int k = -samples / 2; k < samples / 2; k++) {
@@ -194,46 +191,27 @@ public class RaycastRenderer {
     }
 
     private double getAlpha(double x, double y, double z) {
+        Grid g = new Grid() {
 
-        if (!trilinint) {
-            int x2 = (int) Math.round(x);
-            int y2 = (int) Math.round(y);
-            int z2 = (int) Math.round(z);
-
-            if ((x2 >= 0) && (x2 < volume.getDimX()) && (y2 >= 0) && (y2 < volume.getDimY()) && (z2 >= 0) && (z2 < volume.getDimZ())) {
-                return alphas[x2][y2][z2];
-            } else {
+            @Override
+            public double getValue(int x, int y, int z) {
+                if ((x >= 0) && (x < volume.getDimX()) && (y >= 0) && (y < volume.getDimY()) && (z >= 0) && (z < volume.getDimZ())) {
+                    return alphas[x][y][z];
+                }
                 return 0;
             }
-        } else {
-            int x1 = (int) Math.floor(x);
-            int y1 = (int) Math.floor(y);
-            int z1 = (int) Math.floor(z);
-
-            if ((x1 >= 0) && (x1 < volume.getDimX() - 1) && (y1 >= 0) && (y1 < volume.getDimY() - 1) && (z1 >= 0) && (z1 < volume.getDimZ() - 1)) {
-                double xf = x - x1;
-                double yf = y - y1;
-                double zf = z - z1;
-                double value = 0;
-                value += alphas[x1][y1][z1] * (1d - xf) * (1d - yf) * (1d - zf);
-                value += alphas[x1 + 1][y1][z1] * (xf) * (1d - yf) * (1d - zf);
-                value += alphas[x1][y1 + 1][z1] * (1d - xf) * (yf) * (1d - zf);
-                value += alphas[x1 + 1][y1 + 1][z1] * (xf) * (yf) * (1d - zf);
-                value += alphas[x1][y1][z1 + 1] * (1d - xf) * (1d - yf) * (zf);
-                value += alphas[x1 + 1][y1][z1 + 1] * (xf) * (1d - yf) * (zf);
-                value += alphas[x1][y1 + 1][z1 + 1] * (1d - xf) * (yf) * (zf);
-                value += alphas[x1 + 1][y1 + 1][z1 + 1] * (xf) * (yf) * (zf);
-                return value;
-            }
-            return 0;
-        }
+        };
+        Interpolator i = INTERPOLATORS.get(intmode);
+        i.setGrid(g);
+        double a = i.getValue(x, y, z);
+        return a<0?0:(a>1?1:a);
     }
 
     private void computeAllAlphas() {
         for (int x = 0; x < volume.getDimX(); x++) {
-            
+
             for (int y = 0; y < volume.getDimY(); y++) {
-                
+
                 for (int z = 0; z < volume.getDimZ(); z++) {
                     alphas[x][y][z] = computeMultiAlphaLevel(x, y, z);
                 }
@@ -286,4 +264,6 @@ public class RaycastRenderer {
     public BufferedImage visualize(double[] viewMatrix) {
         return slicer(viewMatrix);
     }
+
+
 }

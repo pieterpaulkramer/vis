@@ -4,6 +4,7 @@
  */
 package volvis;
 
+import datatypes.Interpolator;
 import datatypes.RenderResult;
 import gui.OpacityWeightEditor;
 import gui.OpacityWeightPanel;
@@ -28,7 +29,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
 
     private int mode = RaycastRenderer.MIP;
     private int resolution = 1;
-    private boolean trilinint = false;
+    private int intmode = Interpolator.NEARESTNEIGHBOUR;
     private Volume volume = null;
     
     private RaycastRendererPanel tFuncPanel;
@@ -64,9 +65,10 @@ public class RenderingController extends Renderer implements TFChangeListener {
         changed();
     }
 
-    public void setTriLinInt(boolean b) {
-        if(this.trilinint==b)return;
-        this.trilinint = b;
+    public void SetIntMode(int b) {
+        if(this.intmode==b)return;
+        this.intmode = b;
+        System.out.println(b);
         changed();
     }
 
@@ -112,14 +114,14 @@ public class RenderingController extends Renderer implements TFChangeListener {
         }
         
         if (resolution < 5) {
-            threadedRenderer = new RenderThread(this, viewMatrix, renderingId, mode, resolution, trilinint, volume, tFunc, oFunc,maintainedAlphas);
+            threadedRenderer = new RenderThread(this, viewMatrix, renderingId, mode, resolution, intmode, volume, tFunc, oFunc,maintainedAlphas);
             threadedRenderer.execute();
             
-            RaycastRenderer localRenderer = new RaycastRenderer(mode, 5, trilinint, volume, tFunc, oFunc,maintainedAlphas);
+            RaycastRenderer localRenderer = new RaycastRenderer(mode, 5, intmode, volume, tFunc, oFunc,maintainedAlphas);
             BufferedImage image = localRenderer.visualize(viewMatrix);
             return new RenderResult(renderingId, image, volume, 5);
         } else {
-            RaycastRenderer localRenderer = new RaycastRenderer(mode, 5, trilinint, volume, tFunc, oFunc,maintainedAlphas);
+            RaycastRenderer localRenderer = new RaycastRenderer(mode, 5, intmode, volume, tFunc, oFunc,maintainedAlphas);
             
             long startedRendering = System.currentTimeMillis();
             BufferedImage image = localRenderer.visualize(viewMatrix);
@@ -153,6 +155,6 @@ public class RenderingController extends Renderer implements TFChangeListener {
     }
 
     void ochanged() {
-        this.maintainedAlphas = new RaycastRenderer(mode, 1, trilinint, volume, tFunc, oFunc,null).getAlphas();
+        this.maintainedAlphas = new RaycastRenderer(mode, 1, intmode, volume, tFunc, oFunc,null).getAlphas();
     }
 }
