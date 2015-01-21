@@ -7,7 +7,7 @@ package gui;
 import java.awt.BorderLayout;
 import java.util.HashMap;
 import java.util.Map;
-import datatypes.Interpolator;
+import render.interpolate.Interpolator;
 import volvis.RaycastRenderer;
 import volvis.RenderingController;
 

@@ -4,7 +4,7 @@
  */
 package volvis;
 
-import datatypes.Interpolator;
+import render.interpolate.Interpolator;
 import datatypes.RenderResult;
 import gui.OpacityWeightEditor;
 import gui.OpacityWeightPanel;

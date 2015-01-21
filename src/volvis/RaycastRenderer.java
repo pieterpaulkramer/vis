@@ -4,14 +4,17 @@
  */
 package volvis;
 
-import datatypes.CubicInterpolator;
-import datatypes.Grid;
-import datatypes.Interpolator;
-import datatypes.LinearInterpolator;
-import datatypes.NearestNeighbourInterpolator;
+import render.interpolate.CubicInterpolator;
+import render.interpolate.Grid;
+import render.interpolate.Interpolator;
+import render.interpolate.LinearInterpolator;
+import render.interpolate.NearestNeighbourInterpolator;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import render.order.RenderOrder;
+import render.order.SequentialOrder;
 import util.VectorMath;
 import volume.Volume;
 
@@ -24,9 +27,10 @@ public class RaycastRenderer {
     public final static int MIP = 723623796;
     public final static int COMPOSITING = 267673489;
     public final static int OPACITYWEIGHTING = 234624534;
-    
-    private final static HashMap<Integer,Interpolator> INTERPOLATORS = new HashMap<Integer,Interpolator>();
-    static{
+
+    private final static HashMap<Integer, Interpolator> INTERPOLATORS = new HashMap<Integer, Interpolator>();
+
+    static {
         INTERPOLATORS.put(Interpolator.NEARESTNEIGHBOUR, new NearestNeighbourInterpolator());
         INTERPOLATORS.put(Interpolator.LINEAR, new LinearInterpolator());
         INTERPOLATORS.put(Interpolator.CUBIC, new CubicInterpolator());
@@ -91,28 +95,26 @@ public class RaycastRenderer {
         computationRunning = true;
 
         // sample on a plane through the origin of the volume data
-        for (int j = 0; j < image.getHeight() / resolution; j++) {
-            for (int i = 0; i < image.getWidth() / resolution; i++) {
-                if (!computationRunning) {
-                    return null;
-                }
+        RenderOrder ro = new SequentialOrder(resolution, false, imageSize);
+        List<int[]> pixels = ro.getAllCoordinates();
+        //System.out.println(imageSize + "\n" + Arrays.deepToString(pixels.toArray()));
+        for (int[]pix:pixels) {
+            if (!computationRunning) {
+                return null;
+            }
+            //System.out.println(resolution + Arrays.toString(pixel));
+            int[][] pixelsToColor = ro.getPixelsToFill(pix);
+            double[][] ray = CastRay(uVec, pix[0], imageCenter, vVec, pix[1], volumeCenter, viewVec);
+            TFColor voxelColor = computeColor(ray);
 
-                int castx = i * resolution + (resolution - 1) / 2;
-                int casty = j * resolution + (resolution - 1) / 2;
-                double[][] ray = CastRay(uVec, castx, imageCenter, vVec, casty, volumeCenter, viewVec);
-                TFColor voxelColor = computeColor(ray);
-
-                // BufferedImage expects a pixel color packed as ARGB in an int
-                int c_alpha = voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
-                int c_red = voxelColor.r <= 1.0 ? (int) Math.floor(voxelColor.r * 255) : 255;
-                int c_green = voxelColor.g <= 1.0 ? (int) Math.floor(voxelColor.g * 255) : 255;
-                int c_blue = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
-                int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
-                for (int r = 0; r < resolution; r++) {
-                    for (int r2 = 0; r2 < resolution; r2++) {
-                        image.setRGB(i * resolution + r, j * resolution + r2, pixelColor);
-                    }
-                }
+            // BufferedImage expects a pixel color packed as ARGB in an int
+            int c_alpha = voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
+            int c_red = voxelColor.r <= 1.0 ? (int) Math.floor(voxelColor.r * 255) : 255;
+            int c_green = voxelColor.g <= 1.0 ? (int) Math.floor(voxelColor.g * 255) : 255;
+            int c_blue = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
+            int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
+            for (int[] p : pixelsToColor) {
+                image.setRGB(p[0], p[1], pixelColor);
             }
         }
 
@@ -139,9 +141,9 @@ public class RaycastRenderer {
         };
         Interpolator i = INTERPOLATORS.get(intmode);
         i.setGrid(g);
-        short x =(short) i.getValue(coord[0], coord[1], coord[2]);
-        short m = (short)tFunc.getMaximum();
-        return x<0?0:(x>m?m:x);
+        short x = (short) i.getValue(coord[0], coord[1], coord[2]);
+        short m = (short) tFunc.getMaximum();
+        return x < 0 ? 0 : (x > m ? m : x);
     }
 
     private short getVoxel(double x, double y, double z) {
@@ -204,7 +206,7 @@ public class RaycastRenderer {
         Interpolator i = INTERPOLATORS.get(intmode);
         i.setGrid(g);
         double a = i.getValue(x, y, z);
-        return a<0?0:(a>1?1:a);
+        return a < 0 ? 0 : (a > 1 ? 1 : a);
     }
 
     private void computeAllAlphas() {
@@ -264,6 +266,5 @@ public class RaycastRenderer {
     public BufferedImage visualize(double[] viewMatrix) {
         return slicer(viewMatrix);
     }
-
 
 }

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package datatypes;
+package render.interpolate;
 
 import java.util.HashMap;
 
@@ -11,19 +11,16 @@ import java.util.HashMap;
  *
  * @author Helmond
  */
-public class CubicInterpolator extends Interpolator{
-
+public class CubicInterpolator extends Interpolator {
 
     @Override
     public double getValue(double x, double y, double z) {
-        return cubic(x,y,z);
+        return cubic(x, y, z);
     }
-    
+
     private double cubic(double x, double y, double z) {
         return f(x, y, z);
     }
-
-    private static final HashMap<Double, double[]> cubicmap = new HashMap<Double, double[]>();
 
     private double cint(double a1, double a2, double a3, double a4, double x) {
 
@@ -37,14 +34,15 @@ public class CubicInterpolator extends Interpolator{
     }
 
     private double[] getCubicVector(double x) {
-        double[] xs;
-        xs = cubicmap.get(x);
-        if (xs == null) {
-            double x2 = x * x;
-            xs = new double[]{x * ((2 - x) * x - 1), x2 * (3 * x - 5) + 2, x * ((4 - 3 * x) * x + 1), (x - 1) * x2};
-            cubicmap.put(x, xs);
-        }
-        return xs;
+
+        double x2 = x * x;
+        return new double[]{
+            x * ((2 - x) * x - 1),
+            x2 * (3 * x - 5) + 2,
+            x * ((4 - 3 * x) * x + 1),
+           (x - 1) * x2
+        };
+
     }
 
     private double s(int i, int j, int k) {
@@ -65,5 +63,5 @@ public class CubicInterpolator extends Interpolator{
         int fx = (int) Math.floor(x);
         return cint(u(fx - 1, y, z), u(fx, y, z), u(fx + 1, y, z), u(fx + 2, y, z), x - fx);
     }
-    
+
 }
