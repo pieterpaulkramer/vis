@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import render.order.RenderOrder;
 import render.order.SequentialOrder;
+import render.order.SpiralOrder;
 import util.VectorMath;
 import volume.Volume;
 
@@ -95,7 +96,7 @@ public class RaycastRenderer {
         computationRunning = true;
 
         // sample on a plane through the origin of the volume data
-        RenderOrder ro = new SequentialOrder(resolution, false, imageSize);
+        RenderOrder ro = new SpiralOrder(resolution, false, imageSize);
         List<int[]> pixels = ro.getAllCoordinates();
         //System.out.println(imageSize + "\n" + Arrays.deepToString(pixels.toArray()));
         for (int[]pix:pixels) {
