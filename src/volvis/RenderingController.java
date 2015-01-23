@@ -10,9 +10,13 @@ import gui.RaycastRendererPanel;
 import gui.TransferFunctionEditor;
 import java.awt.Component;
 import java.awt.image.BufferedImage;
+import java.util.List;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker.StateValue;
 import render.interpolate.Interpolator;
+import render.order.CombinedOrder;
+import render.order.RenderOrder;
+import render.order.SpiralOrder;
 import util.TFChangeListener;
 import volume.Volume;
 
@@ -21,6 +25,8 @@ import volume.Volume;
  * @author michel
  */
 public class RenderingController extends Renderer implements TFChangeListener {
+    
+    private final static int N_THREADS = 1;
 
     private int mode = RaycastRenderer.MIP;
     private int resolution = 1;
@@ -38,7 +44,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
     private RenderThread threadedRenderer;
     private double[][][] maintainedAlphas;
     
-    private boolean done;
+    boolean done;
     private BufferedImage imageBuffer;
 
     public RenderingController() {
@@ -46,8 +52,6 @@ public class RenderingController extends Renderer implements TFChangeListener {
         tFuncPanel.setSpeedLabel("");
         
         oWeightPanel = new OpacityWeightPanel(this);
-        
-        done = true;
     }
 
     public void setMode(int mode) {
@@ -118,22 +122,15 @@ public class RenderingController extends Renderer implements TFChangeListener {
             return;
         }
         
-        if (resolution < 5) {
-            threadedRenderer = new RenderThread(this, viewMatrix, imageBuffer, mode, resolution, intmode, volume, tFunc, oFunc,maintainedAlphas);
+        clearBuffer();
+        
+        List<CombinedOrder<SpiralOrder>> threadsJobs = SpiralOrder.getThreadedOrders(N_THREADS, imageBuffer.getWidth());
+        for (RenderOrder jobs: threadsJobs) {
+            threadedRenderer = new RenderThread(this, viewMatrix, jobs, imageBuffer, mode, resolution, intmode, volume, tFunc, oFunc,maintainedAlphas);
             threadedRenderer.execute();
-            done = false;
-            
-            RaycastRenderer localRenderer = new RaycastRenderer(mode, 5, intmode, volume, tFunc, oFunc,maintainedAlphas);
-            localRenderer.visualize(viewMatrix, imageBuffer);
-        } else {
-            RaycastRenderer localRenderer = new RaycastRenderer(mode, 5, intmode, volume, tFunc, oFunc,maintainedAlphas);
-            
-            long startedRendering = System.currentTimeMillis();
-            localRenderer.visualize(viewMatrix, imageBuffer);
-            long renderTime = System.currentTimeMillis() - startedRendering;
-            
-            updateRenderTimeLabel(renderTime);
         }
+        
+        done = false;
     }
     
     private void stopRenderer() {
@@ -159,7 +156,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
     }
 
     void ochanged() {
-        this.maintainedAlphas = new RaycastRenderer(mode, 1, intmode, volume, tFunc, oFunc,null).getAlphas();
+        this.maintainedAlphas = new RaycastRenderer(mode, intmode, volume, tFunc, oFunc,null).getAlphas();
     }
 
     @Override
@@ -175,5 +172,13 @@ public class RenderingController extends Renderer implements TFChangeListener {
     @Override
     public Volume getVolume() {
         return volume;
+    }
+    
+    private void clearBuffer() {
+        for (int x=0; x<imageBuffer.getWidth(); x++) {
+            for (int y=0; y<imageBuffer.getHeight(); y++) {
+                imageBuffer.setRGB(x, y, 0);
+            }
+        }
     }
 }

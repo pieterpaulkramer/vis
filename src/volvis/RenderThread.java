@@ -6,6 +6,7 @@ package volvis;
 
 import java.awt.image.BufferedImage;
 import javax.swing.SwingWorker;
+import render.order.RenderOrder;
 import volume.Volume;
 
 public class RenderThread extends SwingWorker {
@@ -14,21 +15,23 @@ public class RenderThread extends SwingWorker {
     private double[] viewMatrix;
     private RenderingController controller;
     private BufferedImage imageBuffer;
+    private RenderOrder jobs;
     
     private boolean stopped = false;
     
-    public RenderThread(RenderingController controller, double[] viewMatrix, BufferedImage imageBuffer, int mode, int resolution, int intmode, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, double[][][] alphas) {
-        renderer = new RaycastRenderer(mode, resolution, intmode, vol, tFunc, oFunc,alphas);
+    public RenderThread(RenderingController controller, double[] viewMatrix, RenderOrder jobs, BufferedImage imageBuffer, int mode, int resolution, int intmode, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, double[][][] alphas) {
+        renderer = new RaycastRenderer(mode, intmode, vol, tFunc, oFunc, alphas);
         
         this.viewMatrix = viewMatrix;
         this.imageBuffer = imageBuffer;
         this.controller = controller;
+        this.jobs = jobs;
     }
 
     @Override
     public Object doInBackground() {
         long startedRunningAt = System.currentTimeMillis();
-        renderer.visualize(viewMatrix, imageBuffer);        
+        renderer.visualize(viewMatrix, imageBuffer, jobs);        
         long renderTime = System.currentTimeMillis() - startedRunningAt;
         
         if (!stopped) {

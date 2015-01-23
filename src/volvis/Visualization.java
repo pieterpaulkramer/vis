@@ -49,7 +49,7 @@ public class Visualization implements GLEventListener, TFChangeListener, ActionL
         
         trackball = new TrackballInteractor(winWidth, winHeight);
         
-        continuousDrawingTimer = new Timer(200, this);
+        continuousDrawingTimer = new Timer(150, this);
         renderingParametersChanged = false;
     }
     

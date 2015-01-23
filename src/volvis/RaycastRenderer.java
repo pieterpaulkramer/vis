@@ -37,7 +37,6 @@ public class RaycastRenderer {
 
     private int intmode;
     private int mode;
-    private int resolution;
     private Volume volume;
     private TransferFunction tFunc;
     private OpacityFunction oFunc;
@@ -45,9 +44,8 @@ public class RaycastRenderer {
 
     private boolean computationRunning;
 
-    public RaycastRenderer(int mode, int resolution, int intmode, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, double[][][] alphas) {
+    public RaycastRenderer(int mode, int intmode, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, double[][][] alphas) {
         this.mode = mode;
-        this.resolution = resolution;
         this.intmode = intmode;
         this.volume = vol;
         this.tFunc = tFunc;
@@ -64,7 +62,7 @@ public class RaycastRenderer {
         return alphas;
     }
 
-    private void slicer(double[] viewMatrix, BufferedImage buffer) {
+    private void slicer(double[] viewMatrix, BufferedImage buffer, RenderOrder jobs) {
         // vector uVec and vVec define a plane through the origin, 
         // perpendicular to the view vector viewVec
         double[] viewVec = new double[3];
@@ -84,23 +82,22 @@ public class RaycastRenderer {
         computationRunning = true;
 
         // sample on a plane through the origin of the volume data
-        RenderOrder ro = new SpiralOrder(resolution, false, buffer.getHeight());
-        List<int[]> pixels = ro.getAllCoordinates();
-        for (int[]pix:pixels) {
+        for (int[] pix: jobs.getAllCoordinates()) {
             if (!computationRunning) {
                 return;
             }
-            int[][] pixelsToColor = ro.getPixelsToFill(pix);
+            
             double[][] ray = CastRay(uVec, pix[0], imageCenter, vVec, pix[1], volumeCenter, viewVec);
             TFColor voxelColor = computeColor(ray);
 
             // BufferedImage expects a pixel color packed as ARGB in an int
             int c_alpha = voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
-            int c_red = voxelColor.r <= 1.0 ? (int) Math.floor(voxelColor.r * 255) : 255;
+            int c_red   = voxelColor.r <= 1.0 ? (int) Math.floor(voxelColor.r * 255) : 255;
             int c_green = voxelColor.g <= 1.0 ? (int) Math.floor(voxelColor.g * 255) : 255;
-            int c_blue = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
+            int c_blue  = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
             int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
-            for (int[] p : pixelsToColor) {
+            
+            for (int[] p : jobs.getPixelsToFill(pix)) {
                 buffer.setRGB(p[0], p[1], pixelColor);
             }
         }
@@ -248,7 +245,7 @@ public class RaycastRenderer {
         }
     }
 
-    public void visualize(double[] viewMatrix, BufferedImage buffer) {
-        slicer(viewMatrix, buffer);
+    public void visualize(double[] viewMatrix, BufferedImage buffer, RenderOrder jobs) {
+        slicer(viewMatrix, buffer, jobs);
     }
 }
