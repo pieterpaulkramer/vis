@@ -45,6 +45,7 @@ public class SequentialOrder extends RenderOrder {
                 CombinedOrder<SequentialOrder> co = new CombinedOrder<SequentialOrder>(cropsize);
                 for(int res:RESOLUTIONS)
                 {
+                    if(res>imageSize-1)continue;
                     co.addOrder(new SequentialOrder(res, prev, cropsize));
                     prev=true;
                 }

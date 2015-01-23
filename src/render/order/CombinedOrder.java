@@ -51,8 +51,8 @@ public class CombinedOrder<O extends RenderOrder> extends RenderOrder {
     
 
     @Override
-    public List<int[]> getAllCoordinates() {
-        ArrayList<int[]> res = new ArrayList<int[]>();
+    public List<Tuple<int[],int[][]>> getAllCoordinates() {
+        ArrayList<Tuple<int[],int[][]>> res = new ArrayList<Tuple<int[],int[][]>>();
         for(RenderOrder o:orders)
         {
             res.addAll(o.getAllCoordinates());
@@ -63,22 +63,6 @@ public class CombinedOrder<O extends RenderOrder> extends RenderOrder {
     @Override
     protected int[] getCoordinate(int i) {
         throw new UnsupportedOperationException("not used by this class"); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    private int getResolutionOfPixel(int[] pix) {
-        for(int res:RESOLUTIONS)
-        {
-            int dif2 = (res-1)/2;
-            int x = pix[0]-dif2;
-            int y = pix[1]-dif2;
-            if(x%res==0 && y%res==0)return res;//TOTO? more efficient?
-        }
-        return 1;
-    }
-
-    @Override
-    public int[][] getPixelsToFill(int[] pixel) {
-        return CombinedOrder.getPixelsToFill(pixel, getResolutionOfPixel(pixel));
     }
 
 }

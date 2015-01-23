@@ -7,6 +7,7 @@ package render.order;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 /**
  *
@@ -31,10 +32,10 @@ public abstract class RenderOrder {
         this.scaledsize = (int) Math.floor((double) imageSize / resolution);;
     }
 
-    public List<int[]> getAllCoordinates() {
+    public List<Tuple<int[],int[][]>> getAllCoordinates() {
         final int maxfails = 8;
         int fails = 0;
-        ArrayList<int[]> coords = new ArrayList<int[]>();
+        ArrayList<Tuple<int[],int[][]>> coords = new ArrayList<Tuple<int[],int[][]>>();
         for (int i = 0; true; i++) {
             if(fails>maxfails)
             {
@@ -49,7 +50,7 @@ public abstract class RenderOrder {
             fails = 0;
             coord[0]+=translation[0];coord[1]+=translation[1];
             if (!isInWorseResolution(coord)) {
-                coords.add(coord);
+                coords.add(new Tuple(coord,getPixelsToFill(coord)));
             }
         }
         return coords;
@@ -70,7 +71,7 @@ public abstract class RenderOrder {
         return x % (nextResolution) == 0 && y % (nextResolution) == 0 && !b;
     }
     
-    public int[][] getPixelsToFill(int[] pixel)
+    private int[][] getPixelsToFill(int[] pixel)
     {
         return RenderOrder.getPixelsToFill(pixel, resolution);
     }

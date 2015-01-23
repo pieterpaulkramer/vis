@@ -14,6 +14,7 @@ import render.interpolate.LinearInterpolator;
 import render.interpolate.NearestNeighbourInterpolator;
 import render.order.RenderOrder;
 import render.order.SpiralOrder;
+import render.order.Tuple;
 import util.VectorMath;
 import volume.Volume;
 
@@ -82,12 +83,12 @@ public class RaycastRenderer {
         computationRunning = true;
 
         // sample on a plane through the origin of the volume data
-        for (int[] pix: jobs.getAllCoordinates()) {
+        for (Tuple<int[],int[][]> pix: jobs.getAllCoordinates()) {
             if (!computationRunning) {
                 return;
             }
             
-            double[][] ray = CastRay(uVec, pix[0], imageCenter, vVec, pix[1], volumeCenter, viewVec);
+            double[][] ray = CastRay(uVec, pix.o1[0], imageCenter, vVec, pix.o1[1], volumeCenter, viewVec);
             TFColor voxelColor = computeColor(ray);
 
             // BufferedImage expects a pixel color packed as ARGB in an int
@@ -97,7 +98,7 @@ public class RaycastRenderer {
             int c_blue  = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
             int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
             
-            for (int[] p : jobs.getPixelsToFill(pix)) {
+            for (int[] p : pix.o2) {
                 buffer.setRGB(p[0], p[1], pixelColor);
             }
         }

@@ -66,7 +66,7 @@ public class SpiralOrder extends RenderOrder {
                 boolean prev = false;
                 CombinedOrder<SpiralOrder> co = new CombinedOrder<SpiralOrder>(cropsize);
                 for(int res:RESOLUTIONS)
-                {
+                {if(res>imageSize-1)continue;
                     co.addOrder(new SpiralOrder(res, prev, cropsize));
                     prev=true;
                 }
