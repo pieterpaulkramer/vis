@@ -15,7 +15,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker.StateValue;
 import render.interpolate.Interpolator;
 import render.order.CombinedOrder;
-import render.order.RenderOrder;
 import render.order.SpiralOrder;
 import util.TFChangeListener;
 import volume.Volume;
@@ -26,12 +25,14 @@ import volume.Volume;
  */
 public class RenderingController extends Renderer implements TFChangeListener {
     
-    private final static int N_THREADS = 1;
+    // The actual amount of threads used to perform the visualization is the
+    // square of N_THREADS_SQ_ROOT
+    private final static int N_THREADS_SQ_ROOT = 2;
 
     private int mode = RaycastRenderer.MIP;
-    private int resolution = 1;
     private int intmode = Interpolator.NEARESTNEIGHBOUR;
     private Volume volume = null;
+    private double[][][] maintainedAlphas;
     
     private RaycastRendererPanel tFuncPanel;
     private TransferFunction tFunc;
@@ -41,10 +42,10 @@ public class RenderingController extends Renderer implements TFChangeListener {
     private OpacityWeightEditor owEditor;
     private OpacityWeightPanel oWeightPanel;
     
-    private RenderThread threadedRenderer;
-    private double[][][] maintainedAlphas;
+    private RenderThread[] threadedRenderers;
+    private int n_threads_done;
+    private long startedRunningAt;
     
-    boolean done;
     private BufferedImage imageBuffer;
 
     public RenderingController() {
@@ -52,6 +53,9 @@ public class RenderingController extends Renderer implements TFChangeListener {
         tFuncPanel.setSpeedLabel("");
         
         oWeightPanel = new OpacityWeightPanel(this);
+        
+        threadedRenderers = new RenderThread[N_THREADS_SQ_ROOT * N_THREADS_SQ_ROOT];
+        n_threads_done = N_THREADS_SQ_ROOT * N_THREADS_SQ_ROOT;
     }
 
     public void setMode(int mode) {
@@ -61,9 +65,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
     }
 
     public void setResolution(int res) {
-        if(this.resolution==res)return;
-        this.resolution = res;
-        changed();
+        // No longer relevant
     }
 
     public void SetIntMode(int b) {
@@ -96,6 +98,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
         }
         
         imageBuffer = new BufferedImage(imageSize, imageSize, BufferedImage.TYPE_INT_ARGB);
+        changed();
     }
 
     @Override
@@ -124,25 +127,32 @@ public class RenderingController extends Renderer implements TFChangeListener {
         
         clearBuffer();
         
-        List<CombinedOrder<SpiralOrder>> threadsJobs = SpiralOrder.getThreadedOrders(N_THREADS, imageBuffer.getWidth());
-        for (RenderOrder jobs: threadsJobs) {
-            threadedRenderer = new RenderThread(this, viewMatrix, jobs, imageBuffer, mode, resolution, intmode, volume, tFunc, oFunc,maintainedAlphas);
-            threadedRenderer.execute();
-        }
+        startedRunningAt = System.currentTimeMillis();
+        n_threads_done = 0;
         
-        done = false;
+        List<CombinedOrder<SpiralOrder>> threadsJobs = SpiralOrder.getThreadedOrders(N_THREADS_SQ_ROOT, imageBuffer.getWidth());
+        for (int i=0; i<N_THREADS_SQ_ROOT*N_THREADS_SQ_ROOT; i++) {
+            threadedRenderers[i] = new RenderThread(this, viewMatrix, threadsJobs.get(i), imageBuffer, mode, intmode, volume, tFunc, oFunc, maintainedAlphas);
+            threadedRenderers[i].execute();
+        }
     }
     
     private void stopRenderer() {
-        if (threadedRenderer != null && threadedRenderer.getState() == StateValue.STARTED) {
-            threadedRenderer.stop();
-            done = true;
+        for (RenderThread tr: threadedRenderers) {
+            if (tr != null && tr.getState() == StateValue.STARTED) {
+                tr.stop();
+                n_threads_done += 1;
+            }
         }
     }
 
-    void renderingDone(final long renderTime) {
-        done = true;
-        updateRenderTimeLabel(renderTime);
+    void renderingDone() {
+        n_threads_done += 1;
+        
+        if (done()) {
+            long renderTime = System.currentTimeMillis() - startedRunningAt;
+            updateRenderTimeLabel(renderTime);
+        }
     }
     
     void updateRenderTimeLabel(final long renderTime) {
@@ -157,6 +167,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
 
     void ochanged() {
         this.maintainedAlphas = new RaycastRenderer(mode, intmode, volume, tFunc, oFunc,null).getAlphas();
+        
     }
 
     @Override
@@ -166,7 +177,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
 
     @Override
     public boolean done() {
-        return done;
+        return n_threads_done == threadedRenderers.length;
     }
 
     @Override

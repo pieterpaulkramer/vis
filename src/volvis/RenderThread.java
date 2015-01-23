@@ -19,7 +19,7 @@ public class RenderThread extends SwingWorker {
     
     private boolean stopped = false;
     
-    public RenderThread(RenderingController controller, double[] viewMatrix, RenderOrder jobs, BufferedImage imageBuffer, int mode, int resolution, int intmode, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, double[][][] alphas) {
+    public RenderThread(RenderingController controller, double[] viewMatrix, RenderOrder jobs, BufferedImage imageBuffer, int mode, int intmode, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, double[][][] alphas) {
         renderer = new RaycastRenderer(mode, intmode, vol, tFunc, oFunc, alphas);
         
         this.viewMatrix = viewMatrix;
@@ -30,12 +30,10 @@ public class RenderThread extends SwingWorker {
 
     @Override
     public Object doInBackground() {
-        long startedRunningAt = System.currentTimeMillis();
         renderer.visualize(viewMatrix, imageBuffer, jobs);        
-        long renderTime = System.currentTimeMillis() - startedRunningAt;
         
         if (!stopped) {
-            controller.renderingDone(renderTime);
+            controller.renderingDone();
         }
         
         return null;
