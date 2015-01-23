@@ -5,6 +5,9 @@
  */
 package render.order;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author Jeffrey
@@ -21,8 +24,9 @@ public class SpiralOrder extends RenderOrder {
         //i=8*depth*(depth+1)/2
         //4depth2+4depth-i=0
         //a=4,b=4,c=-i
-        //depth=(-4+Math.sqrt(16-16*-i)))/8
-        int depth = (int) Math.ceil((-4d + Math.sqrt(16 - 16d * (-i))) / 8d);
+        //depth=(-4+Math.sqrt(16-16*-i))/8
+        //depth=(Math.sqrt(1+i)-1)/2
+        int depth = (int) Math.ceil((Math.sqrt(1+i)-1)/2);
         int ammountOnLevel = Math.max(1, depth * 8);
         int ammountsOnPreviousLevels = i==0?0:8 * (depth*(depth-1)) / 2;
         int numberOnLevel = i==0?0:i - ammountsOnPreviousLevels-1;
@@ -41,11 +45,36 @@ public class SpiralOrder extends RenderOrder {
             y=0;
             x=side-(numberOnLevel-3*side);
         }
-        x+=(scaledsize-1)/2-depth;
-        y+=(scaledsize-1)/2-depth;
+        x+=(scaledsize)/2-depth;
+        y+=(scaledsize)/2-depth;
         x = transform(x);
         y = transform(y);
         return new int[]{x, y};
+    }
+    
+    public static List<CombinedOrder<SpiralOrder>> getThreadedOrders(int rootOFThreads, int imageSize)
+    {
+        List<CombinedOrder<SpiralOrder>> os = new ArrayList<CombinedOrder<SpiralOrder>>();
+        int cropsize = imageSize/rootOFThreads;
+        for(int x = 0; x< rootOFThreads; x++)
+        {
+            int transx = x*cropsize;
+            for(int y = 0; y<rootOFThreads;y++)
+            {
+                int transy = y*cropsize;
+                int[] trans = new int[]{transx,transy};
+                boolean prev = false;
+                CombinedOrder<SpiralOrder> co = new CombinedOrder<SpiralOrder>(cropsize);
+                for(int res:RESOLUTIONS)
+                {
+                    co.addOrder(new SpiralOrder(res, prev, cropsize));
+                    prev=true;
+                }
+                co.setTranslation(trans);
+                os.add(co);
+            }
+        }
+        return os;
     }
 
 }

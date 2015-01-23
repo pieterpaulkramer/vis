@@ -28,5 +28,31 @@ public class SequentialOrder extends RenderOrder {
         int[] coord = new int[]{x, y};
         return coord;
     }
+    
+        
+    public static List<CombinedOrder<SequentialOrder>> getThreadedOrders(int threads, int imageSize)
+    {
+        List<CombinedOrder<SequentialOrder>> os = new ArrayList<CombinedOrder<SequentialOrder>>();
+        int cropsize = imageSize/threads;
+        for(int x = 0; x< threads; x++)
+        {
+            int transx = x*cropsize;
+            for(int y = 0; y<threads;y++)
+            {
+                int transy = y*cropsize;
+                int[] trans = new int[]{transx,transy};
+                boolean prev = false;
+                CombinedOrder<SequentialOrder> co = new CombinedOrder<SequentialOrder>(cropsize);
+                for(int res:RESOLUTIONS)
+                {
+                    co.addOrder(new SequentialOrder(res, prev, cropsize));
+                    prev=true;
+                }
+                co.setTranslation(trans);
+                os.add(co);
+            }
+        }
+        return os;
+    }
 
 }

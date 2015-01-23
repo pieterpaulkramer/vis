@@ -14,13 +14,14 @@ import java.util.List;
  */
 public abstract class RenderOrder {
 
-    public final static int[] RESOLUTIONS = new int[]{33, 17, 9, 5, 3, 1};
+    public final static int[] RESOLUTIONS = new int[]{9, 5, 3, 1};
 
     protected final int resolution;
     private final boolean prevRessComputed;//If true, the pixel values returned should never be the same as with a worse resolution
     protected final int imageSize;
     protected final int dif;
     protected final int scaledsize;
+    private int[] translation = new int[]{0,0};
 
     public RenderOrder(int resolution, boolean prevRessComputed, int imageSize) {
         this.resolution = resolution;
@@ -31,12 +32,22 @@ public abstract class RenderOrder {
     }
 
     public List<int[]> getAllCoordinates() {
+        final int maxfails = 8;
+        int fails = 0;
         ArrayList<int[]> coords = new ArrayList<int[]>();
         for (int i = 0; true; i++) {
-            int[] coord = getCoordinate(i);
-            if (coord[0]-dif < 0 || coord[0]+dif>=imageSize || coord[1]-dif<0 || coord[1]+dif>=imageSize) {
+            if(fails>maxfails)
+            {
                 break;
             }
+            int[] coord = getCoordinate(i);
+            
+            if (coord[0]-dif < 0 || coord[0]+dif>=imageSize || coord[1]-dif<0 || coord[1]+dif>=imageSize) {
+                fails++;
+                continue;
+            }
+            fails = 0;
+            coord[0]+=translation[0];coord[1]+=translation[1];
             if (!isInWorseResolution(coord)) {
                 coords.add(coord);
             }
@@ -51,13 +62,20 @@ public abstract class RenderOrder {
             return false;
         }
         int nextResolution = resolution == 1 ? 3 : (resolution - 1) * 2 + 1;
-        int dif = (nextResolution - 1) / 2;
-        int x = coordinate[0] - dif;
-        int y = coordinate[1] - dif;
-        return x % nextResolution == 0 && y % nextResolution == 0;
+        int dif2 = (nextResolution - 1) / 2;
+        int x = coordinate[0]-dif2;
+        int y = coordinate[1]-dif2;
+        boolean b = coordinate[0]+dif2>=imageSize ||coordinate[0]-dif2<0
+                ||coordinate[1]+dif2>=imageSize ||coordinate[1]-dif2<0;
+        return x % (nextResolution) == 0 && y % (nextResolution) == 0 && !b;
+    }
+    
+    public int[][] getPixelsToFill(int[] pixel)
+    {
+        return RenderOrder.getPixelsToFill(pixel, resolution);
     }
 
-    public int[][] getPixelsToFill(int[] pixel) {
+    protected static int[][] getPixelsToFill(int[] pixel, int resolution) {
         int dif = (resolution - 1) / 2;
         int[][] pixels = new int[resolution * resolution][2];
         for (int x = -dif; x <= dif; x++) {
@@ -82,8 +100,17 @@ public abstract class RenderOrder {
     
     protected int transform(int c)
     {
-        return c*resolution+dif;
+        if(resolution==1)return c;
+        return c*(resolution)+(resolution-1)/2;
     }
     
-
+    protected void setTranslation(int[] translation)
+    {
+        this.translation = translation;
+    }
+    
+    protected int[] getTranslation()
+    {
+        return this.translation;
+    }
 }

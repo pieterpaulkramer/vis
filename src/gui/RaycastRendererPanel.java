@@ -100,7 +100,7 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
 
         jLabel3.setText("Resolution:");
 
-        jSpinner1.setModel(new javax.swing.SpinnerNumberModel(1, 1, 5, 1));
+        jSpinner1.setModel(new javax.swing.SpinnerListModel(new String[] {"1", "3", "5", "9"}));
         jSpinner1.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 jSpinner1StateChanged(evt);
@@ -169,7 +169,7 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_jComboBox1ItemStateChanged
 
     private void jSpinner1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jSpinner1StateChanged
-        renderController.setResolution((Integer)jSpinner1.getValue());
+        renderController.setResolution(Integer.parseInt(jSpinner1.getValue().toString()));
     }//GEN-LAST:event_jSpinner1StateChanged
 
     private void jComboBox2ItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboBox2ItemStateChanged
