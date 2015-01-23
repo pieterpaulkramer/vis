@@ -48,11 +48,9 @@ public class CombinedOrder<O extends RenderOrder> extends RenderOrder {
         }
     }
     
-    
-
     @Override
-    public List<Tuple<int[],int[][]>> getAllCoordinates() {
-        ArrayList<Tuple<int[],int[][]>> res = new ArrayList<Tuple<int[],int[][]>>();
+    public List<Tuple<int[],Integer>> getAllCoordinates() {
+        ArrayList<Tuple<int[],Integer>> res = new ArrayList<Tuple<int[],Integer>>();
         for(RenderOrder o:orders)
         {
             res.addAll(o.getAllCoordinates());

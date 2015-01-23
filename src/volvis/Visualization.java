@@ -7,6 +7,7 @@ package volvis;
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
 import java.awt.Dimension;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -20,6 +21,7 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.awt.GLCanvas;
 import javax.media.opengl.glu.GLU;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import util.TFChangeListener;
 import util.TrackballInteractor;
@@ -35,7 +37,10 @@ public class Visualization implements GLEventListener, TFChangeListener, ActionL
     Renderer renderer;
     GLCanvas canvas;
     int winWidth, winHeight;
-    double fov = 20.0;
+    final double fov = 20.0;
+    double zoom = 1;
+    double[] pan = new double[]{0,0};
+    Point panlocation;
     TrackballInteractor trackball;
     private Timer continuousDrawingTimer;
     
@@ -81,7 +86,7 @@ public class Visualization implements GLEventListener, TFChangeListener, ActionL
         if (renderingParametersChanged) {
             double[] viewMatrix = new double[4 * 4];
             gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, viewMatrix, 0);
-            renderer.visualize(viewMatrix);
+            renderer.visualize(viewMatrix,zoom,pan);
 
             if (!renderer.done()) {
                 continuousDrawingTimer.start();
@@ -255,7 +260,7 @@ public class Visualization implements GLEventListener, TFChangeListener, ActionL
         @Override
         public void mousePressed(MouseEvent e) {
             trackball.setMousePos(e.getX(), e.getY());
-           
+            panlocation = new Point(e.getX(),e.getY());
             renderer.setInteractiveMode(true);
         }
        
@@ -270,9 +275,16 @@ public class Visualization implements GLEventListener, TFChangeListener, ActionL
         
         @Override
         public void mouseDragged(MouseEvent e) {
+            if(SwingUtilities.isLeftMouseButton(e)){
              trackball.drag(e.getX(), e.getY());
              trackball.setRotating(true);
-             changed();
+             changed();}
+            else if(SwingUtilities.isRightMouseButton(e))
+            {
+                pan[0] += e.getX()-panlocation.x;
+                pan[1] -= e.getY()-panlocation.y;
+                panlocation = new Point(e.getX(),e.getY());
+            }
         }
     }
     
@@ -281,12 +293,9 @@ public class Visualization implements GLEventListener, TFChangeListener, ActionL
         @Override
         public void mouseWheelMoved(MouseWheelEvent e) {
             if (e.getWheelRotation() < 0) { // up
-                fov--;
-                if (fov < 2) {
-                    fov = 2;
-                }
+                zoom *=1.25d;
             } else { // down
-                fov++;
+                zoom/=1.25d;
             }
             changed();
         }

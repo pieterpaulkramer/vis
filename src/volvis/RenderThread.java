@@ -16,21 +16,24 @@ public class RenderThread extends SwingWorker {
     private RenderingController controller;
     private BufferedImage imageBuffer;
     private RenderOrder jobs;
+    private double zoom;
+    private double[] pan;
     
     private boolean stopped = false;
     
-    public RenderThread(RenderingController controller, double[] viewMatrix, RenderOrder jobs, BufferedImage imageBuffer, int mode, int intmode, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, double[][][] alphas) {
+    public RenderThread(RenderingController controller, double[] viewMatrix, RenderOrder jobs, BufferedImage imageBuffer, int mode, int intmode, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, double[][][] alphas, double zoom, double[] pan) {
         renderer = new RaycastRenderer(mode, intmode, vol, tFunc, oFunc, alphas);
-        
+        this.zoom = zoom;
         this.viewMatrix = viewMatrix;
         this.imageBuffer = imageBuffer;
         this.controller = controller;
         this.jobs = jobs;
+        this.pan = pan;
     }
 
     @Override
     public Object doInBackground() {
-        renderer.visualize(viewMatrix, imageBuffer, jobs);        
+        renderer.visualize(viewMatrix, imageBuffer, jobs, zoom,pan);        
         
         if (!stopped) {
             controller.renderingDone();

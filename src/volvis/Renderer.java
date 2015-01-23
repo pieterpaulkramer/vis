@@ -57,7 +57,7 @@ public abstract class Renderer {
         }
     }
     
-    public abstract void visualize(double[] viewMatrix);
+    public abstract void visualize(double[] viewMatrix, double zoom,double[] pan);
     
     public abstract BufferedImage rendering();
     

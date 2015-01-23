@@ -5,6 +5,7 @@
 package volvis;
 
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import render.interpolate.CubicInterpolator;
@@ -63,7 +64,7 @@ public class RaycastRenderer {
         return alphas;
     }
 
-    private void slicer(double[] viewMatrix, BufferedImage buffer, RenderOrder jobs) {
+    private void slicer(double[] viewMatrix, BufferedImage buffer, RenderOrder jobs, double zoom,double[] pan) {
         // vector uVec and vVec define a plane through the origin, 
         // perpendicular to the view vector viewVec
         double[] viewVec = new double[3];
@@ -72,23 +73,24 @@ public class RaycastRenderer {
         VectorMath.setVector(viewVec, viewMatrix[2], viewMatrix[6], viewMatrix[10]);
         VectorMath.setVector(uVec, viewMatrix[0], viewMatrix[4], viewMatrix[8]);
         VectorMath.setVector(vVec, viewMatrix[1], viewMatrix[5], viewMatrix[9]);
-
         // image is square
         int imageCenter = buffer.getWidth() / 2;
-
+        System.out.println(zoom);
         double[] volumeCenter = new double[3];
         VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
 
         // Flag that can be set to false from the outside to stop the computations
         computationRunning = true;
 
+        vVec = VectorMath.multiply(vVec, 1/zoom);
+        uVec = VectorMath.multiply(uVec, 1/zoom);
         // sample on a plane through the origin of the volume data
-        for (Tuple<int[],int[][]> pix: jobs.getAllCoordinates()) {
+        for (Tuple<int[],Integer> pix: jobs.getAllCoordinates()) {
             if (!computationRunning) {
                 return;
             }
             
-            double[][] ray = CastRay(uVec, pix.o1[0], imageCenter, vVec, pix.o1[1], volumeCenter, viewVec);
+            double[][] ray = CastRay(uVec, pix.o1[0], imageCenter, vVec, pix.o1[1], volumeCenter, viewVec,pan);
             TFColor voxelColor = computeColor(ray);
 
             // BufferedImage expects a pixel color packed as ARGB in an int
@@ -98,7 +100,7 @@ public class RaycastRenderer {
             int c_blue  = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
             int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
             
-            for (int[] p : pix.o2) {
+            for (int[] p : RenderOrder.getPixelsToFill(pix)) {
                 buffer.setRGB(p[0], p[1], pixelColor);
             }
         }
@@ -133,14 +135,14 @@ public class RaycastRenderer {
         return getVoxel(new double[]{x, y, z});
     }
 
-    private double[][] CastRay(double[] uVec, double i, int imageCenter, double[] vVec, double j, double[] volumeCenter, double[] viewVec) {
+    private double[][] CastRay(double[] uVec, double i, int imageCenter, double[] vVec, double j, double[] volumeCenter, double[] viewVec, double[] pan) {
         int samples = (int) Math.ceil(VectorMath.length(new double[]{volume.getDimX(), volume.getDimY(), volume.getDimZ()}));
         double[][] pixelcoords = new double[samples][3];
         for (int k = -samples / 2; k < samples / 2; k++) {
             int index = k + samples / 2;
-            pixelcoords[index][0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
+            pixelcoords[index][0] = uVec[0] * (i - imageCenter-pan[0]) + vVec[0] * (j - imageCenter-pan[1])
                     + volumeCenter[0] + k * viewVec[0];
-            pixelcoords[index][1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
+            pixelcoords[index][1] = uVec[1] * (i - imageCenter-pan[0]) + vVec[1] * (j - imageCenter-pan[1])
                     + volumeCenter[1] + k * viewVec[1];
             pixelcoords[index][2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
                     + volumeCenter[2] + k * viewVec[2];
@@ -246,7 +248,7 @@ public class RaycastRenderer {
         }
     }
 
-    public void visualize(double[] viewMatrix, BufferedImage buffer, RenderOrder jobs) {
-        slicer(viewMatrix, buffer, jobs);
+    public void visualize(double[] viewMatrix, BufferedImage buffer, RenderOrder jobs, double zoom, double[] pan) {
+        slicer(viewMatrix, buffer, jobs,zoom,pan);
     }
 }

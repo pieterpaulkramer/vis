@@ -32,10 +32,10 @@ public abstract class RenderOrder {
         this.scaledsize = (int) Math.floor((double) imageSize / resolution);;
     }
 
-    public List<Tuple<int[],int[][]>> getAllCoordinates() {
+    public List<Tuple<int[],Integer>> getAllCoordinates() {
         final int maxfails = 8;
         int fails = 0;
-        ArrayList<Tuple<int[],int[][]>> coords = new ArrayList<Tuple<int[],int[][]>>();
+        ArrayList<Tuple<int[],Integer>> coords = new ArrayList<Tuple<int[],Integer>>();
         for (int i = 0; true; i++) {
             if(fails>maxfails)
             {
@@ -50,7 +50,7 @@ public abstract class RenderOrder {
             fails = 0;
             coord[0]+=translation[0];coord[1]+=translation[1];
             if (!isInWorseResolution(coord)) {
-                coords.add(new Tuple(coord,getPixelsToFill(coord)));
+                coords.add(new Tuple(coord,resolution));
             }
         }
         return coords;
@@ -70,13 +70,10 @@ public abstract class RenderOrder {
                 ||coordinate[1]+dif2>=imageSize ||coordinate[1]-dif2<0;
         return x % (nextResolution) == 0 && y % (nextResolution) == 0 && !b;
     }
-    
-    private int[][] getPixelsToFill(int[] pixel)
-    {
-        return RenderOrder.getPixelsToFill(pixel, resolution);
-    }
 
-    protected static int[][] getPixelsToFill(int[] pixel, int resolution) {
+    public static int[][] getPixelsToFill(Tuple<int[],Integer> pix) {
+        int resolution = pix.o2;
+        int[] pixel = pix.o1;
         int dif = (resolution - 1) / 2;
         int[][] pixels = new int[resolution * resolution][2];
         for (int x = -dif; x <= dif; x++) {

@@ -118,7 +118,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
     }
 
     @Override
-    public void visualize(double[] viewMatrix) {
+    public void visualize(double[] viewMatrix, double zoom,double[] pan) {
         stopRenderer();
         
         if (volume == null) {
@@ -132,7 +132,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
         
         List<CombinedOrder<SpiralOrder>> threadsJobs = SpiralOrder.getThreadedOrders(N_THREADS_SQ_ROOT, imageBuffer.getWidth());
         for (int i=0; i<N_THREADS_SQ_ROOT*N_THREADS_SQ_ROOT; i++) {
-            threadedRenderers[i] = new RenderThread(this, viewMatrix, threadsJobs.get(i), imageBuffer, mode, intmode, volume, tFunc, oFunc, maintainedAlphas);
+            threadedRenderers[i] = new RenderThread(this, viewMatrix, threadsJobs.get(i), imageBuffer, mode, intmode, volume, tFunc, oFunc, maintainedAlphas,zoom,pan);
             threadedRenderers[i].execute();
         }
     }
