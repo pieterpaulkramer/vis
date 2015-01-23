@@ -4,17 +4,15 @@
  */
 package volvis;
 
+import java.awt.image.BufferedImage;
+import java.util.HashMap;
+import java.util.List;
 import render.interpolate.CubicInterpolator;
 import render.interpolate.Grid;
 import render.interpolate.Interpolator;
 import render.interpolate.LinearInterpolator;
 import render.interpolate.NearestNeighbourInterpolator;
-import java.awt.image.BufferedImage;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 import render.order.RenderOrder;
-import render.order.SequentialOrder;
 import render.order.SpiralOrder;
 import util.VectorMath;
 import volume.Volume;
@@ -43,7 +41,6 @@ public class RaycastRenderer {
     private Volume volume;
     private TransferFunction tFunc;
     private OpacityFunction oFunc;
-    private int imageSize;
     private double[][][] alphas;
 
     private boolean computationRunning;
@@ -61,22 +58,13 @@ public class RaycastRenderer {
         } else {
             this.alphas = alphas;
         }
-
-        // set up image for storing the resulting rendering
-        // the image width and height are equal to the length of the volume diagonal
-        imageSize = (int) Math.floor(Math.sqrt(vol.getDimX() * vol.getDimX() + vol.getDimY() * vol.getDimY() + vol.getDimZ() * vol.getDimZ()));
-        if (imageSize % 2 != 0) {
-            imageSize = imageSize + 1;
-        }
     }
 
     public double[][][] getAlphas() {
         return alphas;
     }
 
-    private BufferedImage slicer(double[] viewMatrix) {
-        BufferedImage image = new BufferedImage(imageSize, imageSize, BufferedImage.TYPE_INT_ARGB);
-
+    private void slicer(double[] viewMatrix, BufferedImage buffer) {
         // vector uVec and vVec define a plane through the origin, 
         // perpendicular to the view vector viewVec
         double[] viewVec = new double[3];
@@ -87,7 +75,7 @@ public class RaycastRenderer {
         VectorMath.setVector(vVec, viewMatrix[1], viewMatrix[5], viewMatrix[9]);
 
         // image is square
-        int imageCenter = image.getWidth() / 2;
+        int imageCenter = buffer.getWidth() / 2;
 
         double[] volumeCenter = new double[3];
         VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
@@ -96,14 +84,12 @@ public class RaycastRenderer {
         computationRunning = true;
 
         // sample on a plane through the origin of the volume data
-        RenderOrder ro = new SpiralOrder(resolution, false, imageSize);
+        RenderOrder ro = new SpiralOrder(resolution, false, buffer.getHeight());
         List<int[]> pixels = ro.getAllCoordinates();
-        //System.out.println(imageSize + "\n" + Arrays.deepToString(pixels.toArray()));
         for (int[]pix:pixels) {
             if (!computationRunning) {
-                return null;
+                return;
             }
-            //System.out.println(resolution + Arrays.toString(pixel));
             int[][] pixelsToColor = ro.getPixelsToFill(pix);
             double[][] ray = CastRay(uVec, pix[0], imageCenter, vVec, pix[1], volumeCenter, viewVec);
             TFColor voxelColor = computeColor(ray);
@@ -115,11 +101,9 @@ public class RaycastRenderer {
             int c_blue = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
             int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
             for (int[] p : pixelsToColor) {
-                image.setRGB(p[0], p[1], pixelColor);
+                buffer.setRGB(p[0], p[1], pixelColor);
             }
         }
-
-        return image;
     }
 
     void stopSlicer() {
@@ -264,8 +248,7 @@ public class RaycastRenderer {
         }
     }
 
-    public BufferedImage visualize(double[] viewMatrix) {
-        return slicer(viewMatrix);
+    public void visualize(double[] viewMatrix, BufferedImage buffer) {
+        slicer(viewMatrix, buffer);
     }
-
 }

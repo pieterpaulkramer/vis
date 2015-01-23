@@ -4,20 +4,15 @@
  */
 package volvis;
 
-import render.interpolate.Interpolator;
-import datatypes.RenderResult;
 import gui.OpacityWeightEditor;
 import gui.OpacityWeightPanel;
 import gui.RaycastRendererPanel;
 import gui.TransferFunctionEditor;
 import java.awt.Component;
 import java.awt.image.BufferedImage;
-import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker.StateValue;
-import util.ImageDrawer;
+import render.interpolate.Interpolator;
 import util.TFChangeListener;
 import volume.Volume;
 
@@ -42,15 +37,17 @@ public class RenderingController extends Renderer implements TFChangeListener {
     
     private RenderThread threadedRenderer;
     private double[][][] maintainedAlphas;
+    
+    private boolean done;
+    private BufferedImage imageBuffer;
 
-    private ImageDrawer drawer;
-
-    public RenderingController(ImageDrawer drawer) {
+    public RenderingController() {
         tFuncPanel = new RaycastRendererPanel(this);
         tFuncPanel.setSpeedLabel("");
         
         oWeightPanel = new OpacityWeightPanel(this);
-        this.drawer = drawer;
+        
+        done = true;
     }
 
     public void setMode(int mode) {
@@ -68,7 +65,6 @@ public class RenderingController extends Renderer implements TFChangeListener {
     public void SetIntMode(int b) {
         if(this.intmode==b)return;
         this.intmode = b;
-        System.out.println(b);
         changed();
     }
 
@@ -87,6 +83,15 @@ public class RenderingController extends Renderer implements TFChangeListener {
         
         owEditor = new OpacityWeightEditor(oFunc, volume.getHistogram());
         oWeightPanel.setOpacityWeightEditor(owEditor);
+        
+        // set up image for storing the resulting rendering
+        // the image width and height are equal to the length of the volume diagonal
+        int imageSize = (int) Math.floor(Math.sqrt(vol.getDimX() * vol.getDimX() + vol.getDimY() * vol.getDimY() + vol.getDimZ() * vol.getDimZ()));
+        if (imageSize % 2 != 0) {
+            imageSize = imageSize + 1;
+        }
+        
+        imageBuffer = new BufferedImage(imageSize, imageSize, BufferedImage.TYPE_INT_ARGB);
     }
 
     @Override
@@ -106,41 +111,40 @@ public class RenderingController extends Renderer implements TFChangeListener {
     }
 
     @Override
-    public RenderResult visualize(double[] viewMatrix, long renderingId) {
+    public void visualize(double[] viewMatrix) {
         stopRenderer();
         
         if (volume == null) {
-            return null;
+            return;
         }
         
         if (resolution < 5) {
-            threadedRenderer = new RenderThread(this, viewMatrix, renderingId, mode, resolution, intmode, volume, tFunc, oFunc,maintainedAlphas);
+            threadedRenderer = new RenderThread(this, viewMatrix, imageBuffer, mode, resolution, intmode, volume, tFunc, oFunc,maintainedAlphas);
             threadedRenderer.execute();
+            done = false;
             
             RaycastRenderer localRenderer = new RaycastRenderer(mode, 5, intmode, volume, tFunc, oFunc,maintainedAlphas);
-            BufferedImage image = localRenderer.visualize(viewMatrix);
-            return new RenderResult(renderingId, image, volume, 5);
+            localRenderer.visualize(viewMatrix, imageBuffer);
         } else {
             RaycastRenderer localRenderer = new RaycastRenderer(mode, 5, intmode, volume, tFunc, oFunc,maintainedAlphas);
             
             long startedRendering = System.currentTimeMillis();
-            BufferedImage image = localRenderer.visualize(viewMatrix);
+            localRenderer.visualize(viewMatrix, imageBuffer);
             long renderTime = System.currentTimeMillis() - startedRendering;
             
             updateRenderTimeLabel(renderTime);
-            
-            return new RenderResult(renderingId, image, volume, resolution);
         }
     }
     
     private void stopRenderer() {
         if (threadedRenderer != null && threadedRenderer.getState() == StateValue.STARTED) {
             threadedRenderer.stop();
+            done = true;
         }
     }
 
-    void renderingDone(RenderResult renderResult, final long renderTime) {
-        drawer.renderingDone(renderResult);
+    void renderingDone(final long renderTime) {
+        done = true;
         updateRenderTimeLabel(renderTime);
     }
     
@@ -156,5 +160,20 @@ public class RenderingController extends Renderer implements TFChangeListener {
 
     void ochanged() {
         this.maintainedAlphas = new RaycastRenderer(mode, 1, intmode, volume, tFunc, oFunc,null).getAlphas();
+    }
+
+    @Override
+    public BufferedImage rendering() {
+        return imageBuffer;
+    }
+
+    @Override
+    public boolean done() {
+        return done;
+    }
+
+    @Override
+    public Volume getVolume() {
+        return volume;
     }
 }

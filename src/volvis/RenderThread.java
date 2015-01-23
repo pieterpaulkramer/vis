@@ -4,40 +4,35 @@
  */
 package volvis;
 
-import datatypes.RenderResult;
 import java.awt.image.BufferedImage;
 import javax.swing.SwingWorker;
 import volume.Volume;
 
 public class RenderThread extends SwingWorker {
     
-    private long id;
     private RaycastRenderer renderer;
     private double[] viewMatrix;
-    private int resolution;
-    private Volume vol;
     private RenderingController controller;
+    private BufferedImage imageBuffer;
     
     private boolean stopped = false;
     
-    public RenderThread(RenderingController controller, double[] viewMatrix, long renderingId, int mode, int resolution, int intmode, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, double[][][] alphas) {
+    public RenderThread(RenderingController controller, double[] viewMatrix, BufferedImage imageBuffer, int mode, int resolution, int intmode, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, double[][][] alphas) {
         renderer = new RaycastRenderer(mode, resolution, intmode, vol, tFunc, oFunc,alphas);
         
-        this.vol = vol;
         this.viewMatrix = viewMatrix;
-        this.id = renderingId;
-        this.resolution = resolution;
+        this.imageBuffer = imageBuffer;
         this.controller = controller;
     }
 
     @Override
     public Object doInBackground() {
         long startedRunningAt = System.currentTimeMillis();
-        BufferedImage image = renderer.visualize(viewMatrix);        
+        renderer.visualize(viewMatrix, imageBuffer);        
         long renderTime = System.currentTimeMillis() - startedRunningAt;
         
-        if (image != null && !stopped) {
-            controller.renderingDone(new RenderResult(id, image, vol, resolution), renderTime);
+        if (!stopped) {
+            controller.renderingDone(renderTime);
         }
         
         return null;

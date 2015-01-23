@@ -4,9 +4,10 @@
  */
 package volvis;
 
-import datatypes.RenderResult;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import util.TFChangeListener;
+import volume.Volume;
 
 /**
  *
@@ -56,5 +57,11 @@ public abstract class Renderer {
         }
     }
     
-    public abstract RenderResult visualize(double[] viewMatrix, long renderingId);
+    public abstract void visualize(double[] viewMatrix);
+    
+    public abstract BufferedImage rendering();
+    
+    public abstract boolean done();
+
+    public abstract Volume getVolume();
 }
