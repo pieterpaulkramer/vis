@@ -7,14 +7,12 @@ package volvis;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import render.interpolate.CubicInterpolator;
 import render.interpolate.Grid;
 import render.interpolate.Interpolator;
 import render.interpolate.LinearInterpolator;
 import render.interpolate.NearestNeighbourInterpolator;
 import render.order.RenderOrder;
-import render.order.SpiralOrder;
 import render.order.Tuple;
 import util.VectorMath;
 import volume.Volume;
@@ -44,7 +42,8 @@ public class RaycastRenderer {
     private OpacityFunction oFunc;
     private double[][][] alphas;
 
-    private boolean computationRunning;
+    private final Object computationRunningLock;
+    private volatile boolean computationRunning;
 
     public RaycastRenderer(int mode, int intmode, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, double[][][] alphas) {
         this.mode = mode;
@@ -52,19 +51,16 @@ public class RaycastRenderer {
         this.volume = vol;
         this.tFunc = tFunc;
         this.oFunc = oFunc;
-        if (alphas == null) {
-            this.alphas = new double[vol.getDimX()][vol.getDimY()][vol.getDimZ()];
-            computeAllAlphas();
-        } else {
-            this.alphas = alphas;
-        }
+        this.alphas = alphas;
+        
+        // Flag that can be set to false from the outside to stop the computations
+        computationRunning = true;
+        computationRunningLock = new Object();
     }
+    
+    
+    public void visualize(double[] viewMatrix, BufferedImage buffer, RenderOrder jobs, double zoom,double[] pan) {
 
-    public double[][][] getAlphas() {
-        return alphas;
-    }
-
-    private void slicer(double[] viewMatrix, BufferedImage buffer, RenderOrder jobs, double zoom,double[] pan) {
         // vector uVec and vVec define a plane through the origin, 
         // perpendicular to the view vector viewVec
         double[] viewVec = new double[3];
@@ -79,18 +75,13 @@ public class RaycastRenderer {
         double[] volumeCenter = new double[3];
         VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
 
-        // Flag that can be set to false from the outside to stop the computations
-        computationRunning = true;
-
         vVec = VectorMath.multiply(vVec, 1/zoom);
         uVec = VectorMath.multiply(uVec, 1/zoom);
         // sample on a plane through the origin of the volume data
         for (Tuple<int[],Integer> pix: jobs.getAllCoordinates()) {
-            if (!computationRunning) {
-                return;
-            }
-            
+
             double[][] ray = CastRay(uVec, pix.o1[0], imageCenter, vVec, pix.o1[1], volumeCenter, viewVec,pan);
+
             TFColor voxelColor = computeColor(ray);
 
             // BufferedImage expects a pixel color packed as ARGB in an int
@@ -100,14 +91,26 @@ public class RaycastRenderer {
             int c_blue  = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
             int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
             
-            for (int[] p : RenderOrder.getPixelsToFill(pix)) {
-                buffer.setRGB(p[0], p[1], pixelColor);
+            synchronized (computationRunningLock) {
+                if (computationRunning) {
+                    for (int[] p : RenderOrder.getPixelsToFill(pix)) {
+                        buffer.setRGB(p[0], p[1], pixelColor);
+                    }
+                } else {
+                    return;
+                }
             }
         }
     }
 
-    void stopSlicer() {
-        computationRunning = false;
+    /**
+     * Stops the renderer. It is guaranteed that the renderer does not modify any
+     * pixels in the image buffer after this method returns.
+     */
+    public void stopSlicer() {
+        synchronized (computationRunningLock) {
+            computationRunning = false;
+        }
     }
 
     // get a voxel from the volume data by nearest neighbor interpolation
@@ -194,16 +197,18 @@ public class RaycastRenderer {
         return a < 0 ? 0 : (a > 1 ? 1 : a);
     }
 
-    private void computeAllAlphas() {
+    public double[][][] computeAllAlphas() {
+        double[][][] alphas = new double[volume.getDimX()][volume.getDimY()][volume.getDimZ()];
+        
         for (int x = 0; x < volume.getDimX(); x++) {
-
             for (int y = 0; y < volume.getDimY(); y++) {
-
                 for (int z = 0; z < volume.getDimZ(); z++) {
                     alphas[x][y][z] = computeMultiAlphaLevel(x, y, z);
                 }
             }
         }
+        
+        return alphas;
     }
 
     private double computeMultiAlphaLevel(int x, int y, int z) {
@@ -248,7 +253,4 @@ public class RaycastRenderer {
         }
     }
 
-    public void visualize(double[] viewMatrix, BufferedImage buffer, RenderOrder jobs, double zoom, double[] pan) {
-        slicer(viewMatrix, buffer, jobs,zoom,pan);
-    }
 }

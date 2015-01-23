@@ -12,7 +12,6 @@ import java.awt.Component;
 import java.awt.image.BufferedImage;
 import java.util.List;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker.StateValue;
 import render.interpolate.Interpolator;
 import render.order.CombinedOrder;
 import render.order.SpiralOrder;
@@ -27,7 +26,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
     
     // The actual amount of threads used to perform the visualization is the
     // square of N_THREADS_SQ_ROOT
-    private final static int N_THREADS_SQ_ROOT = 2;
+    private final static int N_THREADS_SQ_ROOT = (int) Math.ceil(Math.sqrt(Runtime.getRuntime().availableProcessors()));
 
     private int mode = RaycastRenderer.MIP;
     private int intmode = Interpolator.NEARESTNEIGHBOUR;
@@ -43,7 +42,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
     private OpacityWeightPanel oWeightPanel;
     
     private RenderThread[] threadedRenderers;
-    private int n_threads_done;
+    private volatile int n_threads_done;
     private long startedRunningAt;
     
     private BufferedImage imageBuffer;
@@ -119,7 +118,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
 
     @Override
     public void visualize(double[] viewMatrix, double zoom,double[] pan) {
-        stopRenderer();
+        stopRendering();
         
         if (volume == null) {
             return;
@@ -137,13 +136,14 @@ public class RenderingController extends Renderer implements TFChangeListener {
         }
     }
     
-    private void stopRenderer() {
+    private void stopRendering() {
         for (RenderThread tr: threadedRenderers) {
-            if (tr != null && tr.getState() == StateValue.STARTED) {
+            if (tr != null) {
                 tr.stop();
-                n_threads_done += 1;
             }
         }
+        
+        n_threads_done = threadedRenderers.length;
     }
 
     void renderingDone() {
@@ -166,8 +166,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
     }
 
     void ochanged() {
-        this.maintainedAlphas = new RaycastRenderer(mode, intmode, volume, tFunc, oFunc,null).getAlphas();
-        
+        this.maintainedAlphas = new RaycastRenderer(mode, intmode, volume, tFunc, oFunc, null).computeAllAlphas();
     }
 
     @Override
