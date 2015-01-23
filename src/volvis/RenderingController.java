@@ -32,6 +32,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
     private int intmode = Interpolator.NEARESTNEIGHBOUR;
     private Volume volume = null;
     private double[][][] maintainedAlphas;
+    private double[][][][] maintainedGradients;
     
     private RaycastRendererPanel tFuncPanel;
     private TransferFunction tFunc;
@@ -95,6 +96,8 @@ public class RenderingController extends Renderer implements TFChangeListener {
         if (imageSize % 2 != 0) {
             imageSize = imageSize + 1;
         }
+        
+        maintainedGradients = new RaycastRenderer(mode, intmode, volume, tFunc, oFunc, null).computeAllGradients();
         
         imageBuffer = new BufferedImage(imageSize, imageSize, BufferedImage.TYPE_INT_ARGB);
         changed();

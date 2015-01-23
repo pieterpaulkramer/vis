@@ -210,6 +210,24 @@ public class RaycastRenderer {
         
         return alphas;
     }
+    
+    public double[][][][] computeAllGradients() {
+        double[][][][] gradients = new double[volume.getDimX()][volume.getDimY()][volume.getDimZ()][3];
+        
+        for (int x = 0; x < volume.getDimX(); x++) {
+            for (int y = 0; y < volume.getDimY(); y++) {
+                for (int z = 0; z < volume.getDimZ(); z++) {
+                    gradients[x][y][z] = new double[]{
+                        0.5d * (volume.getVoxel(x + 1, y, z, true) - volume.getVoxel(x - 1, y, z, true)),
+                        0.5d * (volume.getVoxel(x, y + 1, z, true) - volume.getVoxel(x, y - 1, z, true)),
+                        0.5d * (volume.getVoxel(x, y, z + 1, true) - volume.getVoxel(x, y, z - 1, true))
+                    };
+                }
+            }
+        }
+        
+        return gradients;
+    }
 
     private double computeMultiAlphaLevel(int x, int y, int z) {
         double res = 1;

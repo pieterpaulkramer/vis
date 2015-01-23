@@ -38,6 +38,17 @@ public class Volume {
     public short getVoxel(int x, int y, int z) {
         return data[x + dimX * (y + dimY * z)];
     }
+    
+    /**
+     * Like getVoxel(x, y, z), but returns 0 if x, y, z is not in the domain of this volume.
+     */
+    public short getVoxel(int x, int y, int z, boolean zero_if_missing) {
+        if (zero_if_missing && (x < 0 || x >= getDimX() || y < 0 || y >= getDimY() || z < 0 || z >= getDimZ())) {
+            return 0;
+        } else {
+            return getVoxel(x, y, z);
+        }
+    }
 
     public void setVoxel(int x, int y, int z, short value) {
         data[x + dimX * (y + dimY * z)] = value;
