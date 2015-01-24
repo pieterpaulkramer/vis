@@ -7,6 +7,8 @@ package volvis;
 import gui.OpacityWeightEditor;
 import gui.OpacityWeightPanel;
 import gui.RaycastRendererPanel;
+import gui.SurfaceTFEditor;
+import gui.SurfaceTFPanel;
 import gui.TransferFunctionEditor;
 import java.awt.Component;
 import java.awt.image.BufferedImage;
@@ -32,7 +34,6 @@ public class RenderingController extends Renderer implements TFChangeListener {
     private int intmode = Interpolator.NEARESTNEIGHBOUR;
     private Volume volume = null;
     private double[][][] maintainedAlphas;
-    private double[][][][] maintainedGradients;
     
     private RaycastRendererPanel tFuncPanel;
     private TransferFunction tFunc;
@@ -41,6 +42,10 @@ public class RenderingController extends Renderer implements TFChangeListener {
     private OpacityFunction oFunc;
     private OpacityWeightEditor owEditor;
     private OpacityWeightPanel oWeightPanel;
+    
+    // private SurfaceTransferFunction TODO;
+    private SurfaceTFEditor stfEditor;
+    private SurfaceTFPanel stfPanel;
     
     private RenderThread[] threadedRenderers;
     private volatile int n_threads_done;
@@ -53,6 +58,8 @@ public class RenderingController extends Renderer implements TFChangeListener {
         tFuncPanel.setSpeedLabel("");
         
         oWeightPanel = new OpacityWeightPanel(this);
+        
+        stfPanel = new SurfaceTFPanel(this);
         
         threadedRenderers = new RenderThread[N_THREADS_SQ_ROOT * N_THREADS_SQ_ROOT];
         n_threads_done = N_THREADS_SQ_ROOT * N_THREADS_SQ_ROOT;
@@ -79,16 +86,20 @@ public class RenderingController extends Renderer implements TFChangeListener {
         
         tFunc = new TransferFunction(volume.getMinimum(), volume.getMaximum());
         tFunc.addTFChangeListener(this);
-        
         tfEditor = new TransferFunctionEditor(tFunc, volume.getHistogram());
         tFuncPanel.setTransferFunctionEditor(tfEditor);
         
         oFunc = new OpacityFunction(volume.getMinimum(), volume.getMaximum());
         oFunc.addTFChangeListener(this);
         oFunc.addOpChangeListener(this);
-        
         owEditor = new OpacityWeightEditor(oFunc, volume.getHistogram());
         oWeightPanel.setOpacityWeightEditor(owEditor);
+        
+        SurfaceTransferFunction stfFunc = new SurfaceTransferFunction(volume.getMaximumGradient(), volume.getMaximum());
+        stfFunc.addTFChangeListener(this);
+        stfEditor = new SurfaceTFEditor(stfFunc);
+        stfEditor.setGradientIntenstityPlot(volume.getSurfacesPlot(100));
+        stfPanel.setSTFEditor(stfEditor);
         
         // set up image for storing the resulting rendering
         // the image width and height are equal to the length of the volume diagonal
@@ -96,8 +107,6 @@ public class RenderingController extends Renderer implements TFChangeListener {
         if (imageSize % 2 != 0) {
             imageSize = imageSize + 1;
         }
-        
-        maintainedGradients = new RaycastRenderer(mode, intmode, volume, tFunc, oFunc, null).computeAllGradients();
         
         imageBuffer = new BufferedImage(imageSize, imageSize, BufferedImage.TYPE_INT_ARGB);
         changed();
@@ -114,9 +123,12 @@ public class RenderingController extends Renderer implements TFChangeListener {
         return tFuncPanel;
     }
     
-    
     public Component getOWeightPanel() {
         return oWeightPanel;
+    }
+    
+    public Component getSurfaceTFPanel() {
+        return stfPanel;
     }
 
     @Override
@@ -190,7 +202,13 @@ public class RenderingController extends Renderer implements TFChangeListener {
     private void clearBuffer() {
         for (int x=0; x<imageBuffer.getWidth(); x++) {
             for (int y=0; y<imageBuffer.getHeight(); y++) {
-                imageBuffer.setRGB(x, y, 0);
+                if (mode == RaycastRenderer.MIP) {
+                    // MIP renders background to black (identity element for max is zero), so make the background black as well
+                    imageBuffer.setRGB(x, y, 0);
+                } else {
+                    // Other methods render background to white (identity for multiplication is one) so make the background white
+                    imageBuffer.setRGB(x, y, (255<<24) + (255<<16) + (255 << 8) + 255);
+                }
             }
         }
     }

@@ -6,22 +6,32 @@ package volume;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  *
  * @author michel
  */
 public class Volume {
+    
+    private int dimX, dimY, dimZ;
+    private short[] data;
+    private int[] histogram;
+    private double maxGradientSq;
 
     public Volume(int xd, int yd, int zd) {
+        maxGradientSq = -1;
+        
         data = new short[xd * yd * zd];
+        
         dimX = xd;
         dimY = yd;
         dimZ = zd;
     }
 
     public Volume(File file) {
-
+        maxGradientSq = -1;
+        
         try {
             VolumeIO reader = new VolumeIO(file);
             dimX = reader.getXDim();
@@ -89,6 +99,26 @@ public class Volume {
         }
         return maximum;
     }
+    
+    public double getMaximumGradient() {
+        computeMaximumGradientSq();
+        return Math.pow(maxGradientSq, 0.5);
+    }
+    
+    private void computeMaximumGradientSq() {
+        if (maxGradientSq < 0) {
+            for (int x=0; x<getDimX(); x++) {
+                for (int y=0; y<getDimY(); y++) {
+                    for (int z=0; z<getDimZ(); z++) {
+                        maxGradientSq = Math.max(maxGradientSq,
+                                Math.pow(0.5 * (getVoxel(x + 1, y, z, true) - getVoxel(x - 1, y, z, true)), 2) +
+                                Math.pow(0.5 * (getVoxel(x, y + 1, z, true) - getVoxel(x, y - 1, z, true)), 2) +
+                                Math.pow(0.5 * (getVoxel(x, y, z + 1, true) - getVoxel(x, y, z - 1, true)), 2));
+                    }
+                }
+            }
+        }
+    }
 
     public int[] getHistogram() {
         return histogram;
@@ -100,7 +130,26 @@ public class Volume {
             histogram[data[i]]++;
         }
     }
-    private int dimX, dimY, dimZ;
-    private short[] data;
-    private int[] histogram;
+    
+    public int[][] getSurfacesPlot(int gradientbins) {        
+        int[][] plot = new int[getMaximum() + 1][gradientbins];
+        
+        computeMaximumGradientSq();
+        double gradientBinWidth = Math.pow(maxGradientSq, 0.5) / (gradientbins-1);
+        
+        for (int x=0; x<getDimX(); x++) {
+            for (int y=0; y<getDimY(); y++) {
+                for (int z=0; z<getDimZ(); z++) {
+                    double gradient = Math.pow(
+                            Math.pow(0.5 * (getVoxel(x + 1, y, z, true) - getVoxel(x - 1, y, z, true)), 2) +
+                            Math.pow(0.5 * (getVoxel(x, y + 1, z, true) - getVoxel(x, y - 1, z, true)), 2) +
+                            Math.pow(0.5 * (getVoxel(x, y, z + 1, true) - getVoxel(x, y, z - 1, true)), 2), 0.5);
+                    
+                    plot[getVoxel(x,y,z)][(int)(gradient / gradientBinWidth)] += 1;
+                }
+            }
+        }
+        
+        return plot;
+    }
 }
