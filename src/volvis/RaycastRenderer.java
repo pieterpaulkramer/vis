@@ -5,7 +5,6 @@
 package volvis;
 
 import java.awt.image.BufferedImage;
-import java.util.Arrays;
 import java.util.HashMap;
 import render.interpolate.CubicInterpolator;
 import render.interpolate.Grid;
@@ -26,7 +25,6 @@ public class RaycastRenderer {
     public final static int MIP = 723623796;
     public final static int COMPOSITING = 267673489;
     public final static int OPACITYWEIGHTING = 234624534;
-
     private final static HashMap<Integer, Interpolator> INTERPOLATORS = new HashMap<Integer, Interpolator>();
 
     static {
@@ -34,14 +32,12 @@ public class RaycastRenderer {
         INTERPOLATORS.put(Interpolator.LINEAR, new LinearInterpolator());
         INTERPOLATORS.put(Interpolator.CUBIC, new CubicInterpolator());
     }
-
     private int intmode;
     private int mode;
     private Volume volume;
     private TransferFunction tFunc;
     private OpacityFunction oFunc;
     private double[][][] alphas;
-
     private final Object computationRunningLock;
     private volatile boolean computationRunning;
 
@@ -52,14 +48,13 @@ public class RaycastRenderer {
         this.tFunc = tFunc;
         this.oFunc = oFunc;
         this.alphas = alphas;
-        
+
         // Flag that can be set to false from the outside to stop the computations
         computationRunning = true;
         computationRunningLock = new Object();
     }
-    
-    
-    public void visualize(double[] viewMatrix, BufferedImage buffer, RenderOrder jobs, double zoom,double[] pan) {
+
+    public void visualize(double[] viewMatrix, BufferedImage buffer, RenderOrder jobs, double zoom, double[] pan) {
 
         // vector uVec and vVec define a plane through the origin, 
         // perpendicular to the view vector viewVec
@@ -75,22 +70,22 @@ public class RaycastRenderer {
         double[] volumeCenter = new double[3];
         VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
 
-        vVec = VectorMath.multiply(vVec, 1/zoom);
-        uVec = VectorMath.multiply(uVec, 1/zoom);
+        vVec = VectorMath.multiply(vVec, 1 / zoom);
+        uVec = VectorMath.multiply(uVec, 1 / zoom);
         // sample on a plane through the origin of the volume data
-        for (Tuple<int[],Integer> pix: jobs.getAllCoordinates()) {
+        for (Tuple<int[], Integer> pix : jobs.getAllCoordinates()) {
 
-            double[][] ray = CastRay(uVec, pix.o1[0], imageCenter, vVec, pix.o1[1], volumeCenter, viewVec,pan);
+            double[][] ray = CastRay(uVec, pix.o1[0], imageCenter, vVec, pix.o1[1], volumeCenter, viewVec, pan);
 
             TFColor voxelColor = computeColor(ray);
 
             // BufferedImage expects a pixel color packed as ARGB in an int
             int c_alpha = voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
-            int c_red   = voxelColor.r <= 1.0 ? (int) Math.floor(voxelColor.r * 255) : 255;
+            int c_red = voxelColor.r <= 1.0 ? (int) Math.floor(voxelColor.r * 255) : 255;
             int c_green = voxelColor.g <= 1.0 ? (int) Math.floor(voxelColor.g * 255) : 255;
-            int c_blue  = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
+            int c_blue = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
             int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
-            
+
             synchronized (computationRunningLock) {
                 if (computationRunning) {
                     for (int[] p : RenderOrder.getPixelsToFill(pix)) {
@@ -104,8 +99,8 @@ public class RaycastRenderer {
     }
 
     /**
-     * Stops the renderer. It is guaranteed that the renderer does not modify any
-     * pixels in the image buffer after this method returns.
+     * Stops the renderer. It is guaranteed that the renderer does not modify
+     * any pixels in the image buffer after this method returns.
      */
     public void stopSlicer() {
         synchronized (computationRunningLock) {
@@ -117,7 +112,6 @@ public class RaycastRenderer {
     private short getVoxel(double[] coord) {
 
         Grid g = new Grid() {
-
             @Override
             public double getValue(int x, int y, int z) {
                 if ((x >= 0) && (x < volume.getDimX()) && (y >= 0) && (y < volume.getDimY()) && (z >= 0) && (z < volume.getDimZ())) {
@@ -143,9 +137,9 @@ public class RaycastRenderer {
         double[][] pixelcoords = new double[samples][3];
         for (int k = -samples / 2; k < samples / 2; k++) {
             int index = k + samples / 2;
-            pixelcoords[index][0] = uVec[0] * (i - imageCenter-pan[0]) + vVec[0] * (j - imageCenter-pan[1])
+            pixelcoords[index][0] = uVec[0] * (i - imageCenter - pan[0]) + vVec[0] * (j - imageCenter - pan[1])
                     + volumeCenter[0] + k * viewVec[0];
-            pixelcoords[index][1] = uVec[1] * (i - imageCenter-pan[0]) + vVec[1] * (j - imageCenter-pan[1])
+            pixelcoords[index][1] = uVec[1] * (i - imageCenter - pan[0]) + vVec[1] * (j - imageCenter - pan[1])
                     + volumeCenter[1] + k * viewVec[1];
             pixelcoords[index][2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
                     + volumeCenter[2] + k * viewVec[2];
@@ -155,10 +149,10 @@ public class RaycastRenderer {
 
     private double[] lGradientVector(double x, double y, double z) {
         return new double[]{
-            0.5d * (getVoxel(x + 1, y, z) - getVoxel(x - 1, y, z)),
-            0.5d * (getVoxel(x, y + 1, z) - getVoxel(x, y - 1, z)),
-            0.5d * (getVoxel(x, y, z + 1) - getVoxel(x, y, z - 1))
-        };
+                    0.5d * (getVoxel(x + 1, y, z) - getVoxel(x - 1, y, z)),
+                    0.5d * (getVoxel(x, y + 1, z) - getVoxel(x, y - 1, z)),
+                    0.5d * (getVoxel(x, y, z + 1) - getVoxel(x, y, z - 1))
+                };
     }
 
     private double computeSingleAlphaLevel(double x, double y, double z, double r, int fv, double fac) {
@@ -182,7 +176,6 @@ public class RaycastRenderer {
 
     private double getAlpha(double x, double y, double z) {
         Grid g = new Grid() {
-
             @Override
             public double getValue(int x, int y, int z) {
                 if ((x >= 0) && (x < volume.getDimX()) && (y >= 0) && (y < volume.getDimY()) && (z >= 0) && (z < volume.getDimZ())) {
@@ -199,7 +192,7 @@ public class RaycastRenderer {
 
     public double[][][] computeAllAlphas() {
         double[][][] alphas = new double[volume.getDimX()][volume.getDimY()][volume.getDimZ()];
-        
+
         for (int x = 0; x < volume.getDimX(); x++) {
             for (int y = 0; y < volume.getDimY(); y++) {
                 for (int z = 0; z < volume.getDimZ(); z++) {
@@ -207,26 +200,8 @@ public class RaycastRenderer {
                 }
             }
         }
-        
+
         return alphas;
-    }
-    
-    public double[][][][] computeAllGradients() {
-        double[][][][] gradients = new double[volume.getDimX()][volume.getDimY()][volume.getDimZ()][3];
-        
-        for (int x = 0; x < volume.getDimX(); x++) {
-            for (int y = 0; y < volume.getDimY(); y++) {
-                for (int z = 0; z < volume.getDimZ(); z++) {
-                    gradients[x][y][z] = new double[]{
-                        0.5d * (volume.getVoxel(x + 1, y, z, true) - volume.getVoxel(x - 1, y, z, true)),
-                        0.5d * (volume.getVoxel(x, y + 1, z, true) - volume.getVoxel(x, y - 1, z, true)),
-                        0.5d * (volume.getVoxel(x, y, z + 1, true) - volume.getVoxel(x, y, z - 1, true))
-                    };
-                }
-            }
-        }
-        
-        return gradients;
     }
 
     private double computeMultiAlphaLevel(int x, int y, int z) {
@@ -270,5 +245,4 @@ public class RaycastRenderer {
             }
         }
     }
-
 }

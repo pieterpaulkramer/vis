@@ -4,7 +4,6 @@
  */
 package volvis;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import util.TFChangeListener;
 
@@ -16,13 +15,14 @@ public class OpacityFunction {
 
     private ArrayList<TFChangeListener> listeners = new ArrayList<TFChangeListener>();
     private RenderingController ofunclisterner;
+    private short sMin, sMax;
+    private ArrayList<ControlPoint> controlPoints;
 
     // Construct a default grey-scale transfer function over the scalar range min - max.
     // The opacity increases linearly from 0.0 to 1.0
     public OpacityFunction(short min, short max) {
         sMin = min;
         sMax = max;
-        sRange = sMax - sMin;
         controlPoints = new ArrayList<ControlPoint>();
     }
 
@@ -42,11 +42,10 @@ public class OpacityFunction {
         if (value < sMin || value > sMax) {
             return -1;
         }
-       
 
         ControlPoint cp = new ControlPoint(value, width, alphaf);
         controlPoints.add(cp);
-        return controlPoints.size()-1;
+        return controlPoints.size() - 1;
     }
 
     public void removeControlPoint(int idx) {
@@ -56,7 +55,7 @@ public class OpacityFunction {
     public void updateControlPointScalar(int index, int s) {
         controlPoints.get(index).value = s;
     }
-    
+
     public void updateControlPointAlpha(int index, double a) {
         controlPoints.get(index).alphafactor = a;
     }
@@ -79,14 +78,11 @@ public class OpacityFunction {
         for (int i = 0; i < listeners.size(); i++) {
             listeners.get(i).changed();
         }
-        
     }
 
     void addOpChangeListener(RenderingController aThis) {
         this.ofunclisterner = aThis;
     }
-
-
 
     public class ControlPoint implements Comparable<ControlPoint> {
 
@@ -94,10 +90,10 @@ public class OpacityFunction {
         public double width;
         public double alphafactor;
 
-        public ControlPoint(int v, double width,double alphafactor) {
+        public ControlPoint(int v, double width, double alphafactor) {
             value = v;
             this.width = width;
-            this.alphafactor=alphafactor;
+            this.alphafactor = alphafactor;
         }
 
         @Override
@@ -110,8 +106,4 @@ public class OpacityFunction {
             return "(" + value + ") -> " + width;
         }
     }
-    private short sMin, sMax;
-    private int sRange;
-    private int LUTsize = 4095;
-    private ArrayList<ControlPoint> controlPoints;
 }
