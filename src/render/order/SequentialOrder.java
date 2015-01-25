@@ -28,6 +28,19 @@ public class SequentialOrder extends RenderOrder {
         int[] coord = new int[]{x, y};
         return coord;
     }
+
+    @Override
+    protected int getMaxAllowedFaults() {
+        return 0;
+    }
+
+    @Override
+    protected int getAmmountToSkipOnFault() {
+        return 0;
+    }
+    
+    
+    
     
         
     public static List<CombinedOrder<SequentialOrder>> getThreadedOrders(int threads, int imageSize)

@@ -105,4 +105,14 @@ public class DirectedSequentialOrder extends RenderOrder {
         return os;
     }
 
+    @Override
+    protected int getAmmountToSkipOnFault() {
+        return 0;
+    }
+
+    @Override
+    protected int getMaxAllowedFaults() {
+        return 0;
+    }
+
 }

@@ -51,6 +51,18 @@ public class SpiralOrder extends RenderOrder {
         y = transform(y);
         return new int[]{x, y};
     }
+
+    @Override
+    protected int getAmmountToSkipOnFault() {
+        return 0;
+    }
+
+    @Override
+    protected int getMaxAllowedFaults() {
+        return scaledsize*3+1;
+    }
+    
+    
     
     public static List<CombinedOrder<SpiralOrder>> getThreadedOrders(int rootOFThreads, int imageSize)
     {
