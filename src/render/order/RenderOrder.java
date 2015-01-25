@@ -22,7 +22,7 @@ public abstract class RenderOrder {
     protected final int imageSize;
     protected final int dif;
     protected final int scaledsize;
-    private int[] translation = new int[]{0,0};
+    private int[] translation = new int[]{0, 0};
 
     public RenderOrder(int resolution, boolean prevRessComputed, int imageSize) {
         this.resolution = resolution;
@@ -32,25 +32,28 @@ public abstract class RenderOrder {
         this.scaledsize = (int) Math.floor((double) imageSize / resolution);;
     }
 
-    public List<Tuple<int[],Integer>> getAllCoordinates() {
-        final int maxfails = 8;
+    public List<Tuple<int[], Integer>> getAllCoordinates() {
+        final int maxfails = getMaxAllowedFaults();
+        final int skips = getAmmountToSkipOnFault();
         int fails = 0;
-        ArrayList<Tuple<int[],Integer>> coords = new ArrayList<Tuple<int[],Integer>>();
+        ArrayList<Tuple<int[], Integer>> coords = new ArrayList<Tuple<int[], Integer>>();
         for (int i = 0; true; i++) {
-            if(fails>maxfails)
-            {
-                break;
-            }
+
             int[] coord = getCoordinate(i);
-            
-            if (coord[0]-dif < 0 || coord[0]+dif>=imageSize || coord[1]-dif<0 || coord[1]+dif>=imageSize) {
+
+            if (coord[0] - dif < 0 || coord[0] + dif >= imageSize || coord[1] - dif < 0 || coord[1] + dif >= imageSize) {
                 fails++;
+                if (fails > maxfails) {
+                    break;
+                }
+                i += skips;
                 continue;
             }
             fails = 0;
-            coord[0]+=translation[0];coord[1]+=translation[1];
+            coord[0] += translation[0];
+            coord[1] += translation[1];
             if (!isInWorseResolution(coord)) {
-                coords.add(new Tuple(coord,resolution));
+                coords.add(new Tuple(coord, resolution));
             }
         }
         return coords;
@@ -58,20 +61,24 @@ public abstract class RenderOrder {
 
     protected abstract int[] getCoordinate(int i);
 
+    protected abstract int getAmmountToSkipOnFault();
+
+    protected abstract int getMaxAllowedFaults();
+
     private boolean isInWorseResolution(int[] coordinate) {
         if (!prevRessComputed) {
             return false;
         }
         int nextResolution = resolution == 1 ? 3 : (resolution - 1) * 2 + 1;
         int dif2 = (nextResolution - 1) / 2;
-        int x = coordinate[0]-dif2;
-        int y = coordinate[1]-dif2;
-        boolean b = coordinate[0]+dif2>=imageSize ||coordinate[0]-dif2<0
-                ||coordinate[1]+dif2>=imageSize ||coordinate[1]-dif2<0;
+        int x = coordinate[0] - dif2;
+        int y = coordinate[1] - dif2;
+        boolean b = coordinate[0] + dif2 >= imageSize || coordinate[0] - dif2 < 0
+                || coordinate[1] + dif2 >= imageSize || coordinate[1] - dif2 < 0;
         return x % (nextResolution) == 0 && y % (nextResolution) == 0 && !b;
     }
 
-    public static int[][] getPixelsToFill(Tuple<int[],Integer> pix) {
+    public static int[][] getPixelsToFill(Tuple<int[], Integer> pix) {
         int resolution = pix.o2;
         int[] pixel = pix.o1;
         int dif = (resolution - 1) / 2;
@@ -95,20 +102,19 @@ public abstract class RenderOrder {
     public boolean isPrevRessComputed() {
         return prevRessComputed;
     }
-    
-    protected int transform(int c)
-    {
-        if(resolution==1)return c;
-        return c*(resolution)+(resolution-1)/2;
+
+    protected int transform(int c) {
+        if (resolution == 1) {
+            return c;
+        }
+        return c * (resolution) + (resolution - 1) / 2;
     }
-    
-    protected void setTranslation(int[] translation)
-    {
+
+    protected void setTranslation(int[] translation) {
         this.translation = translation;
     }
-    
-    protected int[] getTranslation()
-    {
+
+    protected int[] getTranslation() {
         return this.translation;
     }
 }

@@ -48,6 +48,8 @@ public class CombinedOrder<O extends RenderOrder> extends RenderOrder {
         }
     }
     
+    
+    
     @Override
     public List<Tuple<int[],Integer>> getAllCoordinates() {
         ArrayList<Tuple<int[],Integer>> res = new ArrayList<Tuple<int[],Integer>>();
@@ -60,7 +62,19 @@ public class CombinedOrder<O extends RenderOrder> extends RenderOrder {
 
     @Override
     protected int[] getCoordinate(int i) {
-        throw new UnsupportedOperationException("not used by this class"); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not used by this class"); //To change body of generated methods, choose Tools | Templates.
     }
+
+    @Override
+    protected int getAmmountToSkipOnFault() {
+        throw new UnsupportedOperationException("Not used by this class"); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    protected int getMaxAllowedFaults() {
+        throw new UnsupportedOperationException("Not used by this class"); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    
 
 }

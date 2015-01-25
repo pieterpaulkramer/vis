@@ -16,6 +16,9 @@ import java.util.List;
 import javax.swing.SwingUtilities;
 import render.interpolate.Interpolator;
 import render.order.CombinedOrder;
+import render.order.RandomOrder;
+import render.order.RenderOrder;
+import render.order.SequentialOrder;
 import render.order.SpiralOrder;
 import util.TFChangeListener;
 import volume.Volume;
@@ -69,10 +72,6 @@ public class RenderingController extends Renderer implements TFChangeListener {
         if(this.mode==mode)return;
         this.mode = mode;
         changed();
-    }
-
-    public void setResolution(int res) {
-        // No longer relevant
     }
 
     public void SetIntMode(int b) {
@@ -144,9 +143,9 @@ public class RenderingController extends Renderer implements TFChangeListener {
         startedRunningAt = System.currentTimeMillis();
         n_threads_done = 0;
         
-        List<CombinedOrder<SpiralOrder>> threadsJobs = SpiralOrder.getThreadedOrders(N_THREADS_SQ_ROOT, imageBuffer.getWidth());
-        for (int i=0; i<N_THREADS_SQ_ROOT*N_THREADS_SQ_ROOT; i++) {
-            threadedRenderers[i] = new RenderThread(this, viewMatrix, threadsJobs.get(i), imageBuffer, mode, intmode, volume, tFunc, oFunc, maintainedAlphas,zoom,pan);
+        List threadsJobs = SpiralOrder.getThreadedOrders(N_THREADS_SQ_ROOT, imageBuffer.getWidth());
+        for (int i=0; i<threadsJobs.size(); i++) {
+            threadedRenderers[i] = new RenderThread(this, viewMatrix, (RenderOrder)threadsJobs.get(i), imageBuffer, mode, intmode, volume, tFunc, oFunc, maintainedAlphas,zoom,pan);
             threadedRenderers[i].execute();
         }
     }
