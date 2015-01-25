@@ -135,11 +135,13 @@ public class RaycastRenderer {
     private double[][] CastRay(double[] uVec, double i, int imageCenter, double[] vVec, double j, double[] volumeCenter, double[] viewVec, double[] pan) {
         int samples = (int) Math.ceil(VectorMath.length(new double[]{volume.getDimX(), volume.getDimY(), volume.getDimZ()}));
         double[][] pixelcoords = new double[samples][3];
+        i-=pan[0];
+        j-=pan[1];
         for (int k = -samples / 2; k < samples / 2; k++) {
             int index = k + samples / 2;
-            pixelcoords[index][0] = uVec[0] * (i - imageCenter - pan[0]) + vVec[0] * (j - imageCenter - pan[1])
+            pixelcoords[index][0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
                     + volumeCenter[0] + k * viewVec[0];
-            pixelcoords[index][1] = uVec[1] * (i - imageCenter - pan[0]) + vVec[1] * (j - imageCenter - pan[1])
+            pixelcoords[index][1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
                     + volumeCenter[1] + k * viewVec[1];
             pixelcoords[index][2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
                     + volumeCenter[2] + k * viewVec[2];

@@ -8,6 +8,7 @@ import java.awt.BorderLayout;
 import java.io.File;
 import javax.media.opengl.awt.GLCanvas;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.filechooser.FileFilter;
 import volume.Volume;
 import volvis.RenderingController;
@@ -43,6 +44,7 @@ public class VolVisApplication extends javax.swing.JFrame {
         tabbedPanel.addTab("Raycaster", renderController.getTFuncPanel());
         tabbedPanel.addTab("Opacity Weighter", renderController.getOWeightPanel());
         tabbedPanel.addTab("Surface discovery", renderController.getSurfaceTFPanel());
+        this.setExtendedState( this.getExtendedState()|JFrame.MAXIMIZED_BOTH );
         //*/
     }
 
@@ -64,6 +66,7 @@ public class VolVisApplication extends javax.swing.JFrame {
         renderPanel = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setLocationByPlatform(true);
 
         splitPane.setDividerLocation(600);
 

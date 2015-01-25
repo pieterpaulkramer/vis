@@ -49,6 +49,18 @@ public class RenderThread extends SwingWorker {
         
         return null;
     }
+
+    @Override
+    protected void done() {//make thrown exceptions in threads visible
+        try{
+            get();
+        }catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+    
+    
     
     /**
      * Stops the renderer. It is guaranteed that when this method returns, the thread
