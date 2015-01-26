@@ -194,7 +194,7 @@ public class SurfaceTFEditor extends javax.swing.JPanel {
         Color newColor = JColorChooser.showDialog(this, "Choose color", colorButton.getBackground());
         if (newColor != null) {
             colorButton.setBackground(newColor);
-            tfunc.updateControlPointColor(selected, newColor);
+            tfunc.updateControlRectangleColor(selected, newColor);
             tfunc.changed();
             tfView.repaint();
         }

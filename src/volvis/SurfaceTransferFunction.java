@@ -20,10 +20,10 @@ public class SurfaceTransferFunction {
     private ArrayList<TFChangeListener> listeners = new ArrayList<TFChangeListener>();
     private ArrayList<ControlRectangle> controlPoints;
 
-    public SurfaceTransferFunction(double maxGradient, double maxIntensity) {
+    public SurfaceTransferFunction(double maxIntensity, double maxGradient) {
         this.maxIntensity = maxIntensity;
         this.maxGradient = maxGradient;
-        this.domain = new Rectangle2D.Double(0, 0, maxGradient, maxIntensity);
+        this.domain = new Rectangle2D.Double(0, 0, maxIntensity, maxGradient);
         this.controlPoints = new ArrayList<ControlRectangle>();
     }
 
@@ -35,30 +35,36 @@ public class SurfaceTransferFunction {
         return maxGradient;
     }
 
-    public ArrayList<ControlRectangle> getControlPoints() {
+    public ArrayList<ControlRectangle> getControlRectangles() {
         return controlPoints;
     }
 
-    public int addControlPoint(Rectangle2D.Double area, Color color, double alphaf) {
+    public int addControlRectangle(Rectangle2D.Double area, Color color, double alphaf) {
         if (!domain.contains(area)) {
-            return -1;
+            throw new RuntimeException("Area not in domain");
         }
 
         ControlRectangle cp = new ControlRectangle(area, color, alphaf);
         controlPoints.add(cp);
+        
+        changed();
+        
         return controlPoints.size() - 1;
     }
 
-    public void removeControlPoint(int idx) {
+    public void removeControlRectangle(int idx) {
         controlPoints.remove(idx);
+        changed();
     }
 
-    public void updateControlPointAlpha(int idx, double a) {
+    public void updateControlRectangleAlpha(int idx, double a) {
         controlPoints.get(idx).alpha = a;
+        changed();
     }
 
-    public void updateControlPointColor(int idx, Color color) {
+    public void updateControlRectangleColor(int idx, Color color) {
         controlPoints.get(idx).color = color;
+        changed();
     }
 
     // Add a changelistener, which will be notified is the transfer function changes
@@ -85,6 +91,10 @@ public class SurfaceTransferFunction {
             this.area = area;
             this.color = color;
             this.alpha = alpha;
+        }
+        
+        public Color getColorWithAlpha() {
+            return new Color(color.getRed(), color.getGreen(), color.getBlue(), (int) (alpha*255));
         }
     }
 }

@@ -26,6 +26,8 @@ public class RaycastRenderer {
     public final static int MIP = 723623796;
     public final static int COMPOSITING = 267673489;
     public final static int OPACITYWEIGHTING = 234624534;
+    public final static int SURFACES = 48494948;
+    
     private final static HashMap<Integer, Interpolator> INTERPOLATORS = new HashMap<Integer, Interpolator>();
 
     static {
@@ -38,16 +40,19 @@ public class RaycastRenderer {
     private Volume volume;
     private TransferFunction tFunc;
     private OpacityFunction oFunc;
+    private final SurfaceTransferFunction stfFunc;
     private double[][][] alphas;
+    
     private final Object computationRunningLock;
     private volatile boolean computationRunning;
 
-    public RaycastRenderer(int mode, int intmode, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, double[][][] alphas) {
+    public RaycastRenderer(int mode, int intmode, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, SurfaceTransferFunction stfFunc, double[][][] alphas) {
         this.mode = mode;
         this.intmode = intmode;
         this.volume = vol;
         this.tFunc = tFunc;
         this.oFunc = oFunc;
+        this.stfFunc = stfFunc;
         this.alphas = alphas;
 
         // Flag that can be set to false from the outside to stop the computations
@@ -67,7 +72,6 @@ public class RaycastRenderer {
         VectorMath.setVector(vVec, viewMatrix[1], viewMatrix[5], viewMatrix[9]);
         // image is square
         int imageCenter = buffer.getWidth() / 2;
-        System.out.println(zoom);
         double[] volumeCenter = new double[3];
         VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
 
@@ -138,11 +142,23 @@ public class RaycastRenderer {
     }
 
     private double[] lGradientVector(double x, double y, double z) {
+        // TODO dit op een handige manier interpoleren
+        
         return new double[]{
             0.5d * (getVoxel(x + 1, y, z) - getVoxel(x - 1, y, z)),
             0.5d * (getVoxel(x, y + 1, z) - getVoxel(x, y - 1, z)),
             0.5d * (getVoxel(x, y, z + 1) - getVoxel(x, y, z - 1))
         };
+    }
+    
+    private double getGradient(double[] coord) {
+        return getGradient(coord[0], coord[1], coord[2]);
+    }
+    
+    private double getGradient(double x, double y, double z) {
+        double[] vec = lGradientVector(x, y, z);
+        
+        return Math.sqrt(Math.pow(vec[0], 2) + Math.pow(vec[1], 2) + Math.pow(vec[2], 2));
     }
 
     private double computeSingleAlphaLevel(double x, double y, double z, double r, int fv, double fac) {
@@ -227,6 +243,18 @@ public class RaycastRenderer {
                     double a = getAlpha(coord);
                     cur.a = a;
                     color.layer(cur);
+                }
+                return color;
+            }
+            case (SURFACES): {
+                TFColor color = new TFColor();
+                for (double[] coord: ray) {
+                    for (SurfaceTransferFunction.ControlRectangle r: stfFunc.getControlRectangles()) {
+                        if (r.area.contains(getVoxel(coord), getGradient(coord))) {
+                            color.layer(new TFColor(r.color.getRed()/255.0, r.color.getGreen()/255.0, r.color.getBlue()/255.0, r.alpha * 255));
+                            break;
+                        }
+                    }
                 }
                 return color;
             }

@@ -23,6 +23,7 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
         SELECTION_MAP.put("MIP", RaycastRenderer.MIP);
         SELECTION_MAP.put("Compositing", RaycastRenderer.COMPOSITING);
         SELECTION_MAP.put("Opacity weighting", RaycastRenderer.OPACITYWEIGHTING);
+        SELECTION_MAP.put("Surfaces", RaycastRenderer.SURFACES);
         
         INTERPOLATION_MAP.put("Nearest Neighbour", Interpolator.NEARESTNEIGHBOUR);
         INTERPOLATION_MAP.put("Linear", Interpolator.LINEAR);
@@ -89,10 +90,15 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
 
         jLabel2.setText("Visulisation method:");
 
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "MIP", "Compositing", "Opacity weighting" }));
+        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "MIP", "Compositing", "Opacity weighting", "Surfaces" }));
         jComboBox1.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 jComboBox1ItemStateChanged(evt);
+            }
+        });
+        jComboBox1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jComboBox1ActionPerformed(evt);
             }
         });
 
@@ -157,6 +163,10 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
         //System.out.println(val);
         renderController.SetIntMode(val);
     }//GEN-LAST:event_jComboBox2ItemStateChanged
+
+    private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jComboBox1ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox jComboBox1;
