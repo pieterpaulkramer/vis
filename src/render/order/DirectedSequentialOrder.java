@@ -30,6 +30,7 @@ public class DirectedSequentialOrder extends RenderOrder {
             int y = i / (scaledsize);
             switch (direction) {
                 case (0):
+                    y = scaledsize - y - 1;
                     break;
                 case (2): {
                     int k = x;
@@ -38,7 +39,7 @@ public class DirectedSequentialOrder extends RenderOrder {
                     break;
                 }
                 case (4): {
-                    y = scaledsize - y - 1;
+                    
                     break;
                 }
                 case (6): {
@@ -61,16 +62,25 @@ public class DirectedSequentialOrder extends RenderOrder {
             int numberOnLayer = i - ammountOnPrevLayers;
             int x = layer - numberOnLayer-1, y = numberOnLayer;
             switch (direction) {
-                case (1): {
+                case (1):
+                    y = scaledsize - y - 1;
                     break;
-                }
                 case (3): {
+                    int k = x;
+                    x = y;
+                    y = k;
                     break;
                 }
                 case (5): {
+                    int k = x;
+                    x = scaledsize - y - 1;;
+                    y = k;
                     break;
+                    
                 }
                 case (7): {
+                    y = scaledsize - y - 1;
+                    x = scaledsize - x - 1;
                     break;
                 }
             }
@@ -112,7 +122,7 @@ public class DirectedSequentialOrder extends RenderOrder {
 
     @Override
     protected int getMaxAllowedFaults() {
-        return 0;
+        return direction%2==1?2*scaledsize:0;
     }
 
 }

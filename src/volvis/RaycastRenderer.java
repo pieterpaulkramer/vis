@@ -5,6 +5,7 @@
 package volvis;
 
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.HashMap;
 import render.interpolate.CubicInterpolator;
 import render.interpolate.Grid;
@@ -75,7 +76,7 @@ public class RaycastRenderer {
         // sample on a plane through the origin of the volume data
         for (Tuple<int[], Integer> pix : jobs.getAllCoordinates()) {
 
-            double[][] ray = CastRay(uVec, pix.o1[0], imageCenter, vVec, pix.o1[1], volumeCenter, viewVec, pan);
+            Ray ray = CastRay(uVec, pix.o1[0], imageCenter, vVec, pix.o1[1], volumeCenter, viewVec, pan);
 
             TFColor voxelColor = computeColor(ray);
 
@@ -132,29 +133,16 @@ public class RaycastRenderer {
         return getVoxel(new double[]{x, y, z});
     }
 
-    private double[][] CastRay(double[] uVec, double i, int imageCenter, double[] vVec, double j, double[] volumeCenter, double[] viewVec, double[] pan) {
-        int samples = (int) Math.ceil(VectorMath.length(new double[]{volume.getDimX(), volume.getDimY(), volume.getDimZ()}));
-        double[][] pixelcoords = new double[samples][3];
-        i-=pan[0];
-        j-=pan[1];
-        for (int k = -samples / 2; k < samples / 2; k++) {
-            int index = k + samples / 2;
-            pixelcoords[index][0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
-                    + volumeCenter[0] + k * viewVec[0];
-            pixelcoords[index][1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
-                    + volumeCenter[1] + k * viewVec[1];
-            pixelcoords[index][2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
-                    + volumeCenter[2] + k * viewVec[2];
-        }
-        return pixelcoords;
+    private Ray CastRay(double[] uVec, double i, int imageCenter, double[] vVec, double j, double[] volumeCenter, double[] viewVec, double[] pan) {
+        return new Ray(volume, uVec, vVec, viewVec, pan, i, j, imageCenter, volumeCenter);
     }
 
     private double[] lGradientVector(double x, double y, double z) {
         return new double[]{
-                    0.5d * (getVoxel(x + 1, y, z) - getVoxel(x - 1, y, z)),
-                    0.5d * (getVoxel(x, y + 1, z) - getVoxel(x, y - 1, z)),
-                    0.5d * (getVoxel(x, y, z + 1) - getVoxel(x, y, z - 1))
-                };
+            0.5d * (getVoxel(x + 1, y, z) - getVoxel(x - 1, y, z)),
+            0.5d * (getVoxel(x, y + 1, z) - getVoxel(x, y - 1, z)),
+            0.5d * (getVoxel(x, y, z + 1) - getVoxel(x, y, z - 1))
+        };
     }
 
     private double computeSingleAlphaLevel(double x, double y, double z, double r, int fv, double fac) {
@@ -214,7 +202,7 @@ public class RaycastRenderer {
         return 1 - res;
     }
 
-    private TFColor computeColor(double[][] ray) {
+    private TFColor computeColor(Ray ray) {
         switch (mode) {
             case (MIP): {
                 int max = 0;

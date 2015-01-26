@@ -147,7 +147,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
         startedRunningAt = System.currentTimeMillis();
         n_threads_done = 0;
 
-        List threadsJobs = SpiralOrder.getThreadedOrders(N_THREADS_SQ_ROOT, imageBuffer.getWidth());
+        List threadsJobs = RenderOrder.getOptimalThreadedOrders(N_THREADS_SQ_ROOT, imageBuffer.getWidth());
 
         for (int i=0; i<threadsJobs.size(); i++) {
             threadedRenderers[i] = new RenderThread(this, viewMatrix, (RenderOrder)threadsJobs.get(i), imageBuffer, mode, intmode, volume, tFunc, oFunc, maintainedAlphas,zoom,pan);

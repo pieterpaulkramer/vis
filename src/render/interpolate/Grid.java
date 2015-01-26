@@ -4,8 +4,8 @@ package render.interpolate;
  *
  * @author Helmond
  */
-public abstract class Grid {
+public interface Grid {
 
-    public abstract double getValue(int x, int y, int z);
+    public double getValue(int x, int y, int z);
     
 }
