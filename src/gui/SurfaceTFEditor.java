@@ -38,8 +38,8 @@ public class SurfaceTFEditor extends javax.swing.JPanel {
         return tfView.getHeight();
     }
     
-    public void setGradientIntenstityPlot(int[][] gradientIntensityPlot) {
-        tfView.drawPlot(gradientIntensityPlot);
+    public void setGradientIntenstityPlot(int[][] gradientIntensityPlot, double maximumGradient) {
+        tfView.drawPlot(gradientIntensityPlot, maximumGradient);
     }
 
     public void setSelectedInfo(int idx, int s, double a, TFColor c) {
@@ -194,7 +194,7 @@ public class SurfaceTFEditor extends javax.swing.JPanel {
         Color newColor = JColorChooser.showDialog(this, "Choose color", colorButton.getBackground());
         if (newColor != null) {
             colorButton.setBackground(newColor);
-            tfunc.updateControlPointColor(selected, newColor);
+            tfunc.updateControlRectangleColor(selected, newColor);
             tfunc.changed();
             tfView.repaint();
         }
