@@ -5,7 +5,6 @@
 package volvis;
 
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 import java.util.HashMap;
 import render.interpolate.CubicInterpolator;
 import render.interpolate.Grid;

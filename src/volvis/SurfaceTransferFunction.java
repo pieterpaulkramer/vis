@@ -18,13 +18,13 @@ public class SurfaceTransferFunction {
     private double maxIntensity, maxGradient;
     private Rectangle2D.Double domain;
     private ArrayList<TFChangeListener> listeners = new ArrayList<TFChangeListener>();
-    private ArrayList<ControlRectangle> controlPoints;
+    private ArrayList<ControlRectangle> controlRectangles;
 
     public SurfaceTransferFunction(double maxIntensity, double maxGradient) {
         this.maxIntensity = maxIntensity;
         this.maxGradient = maxGradient;
         this.domain = new Rectangle2D.Double(0, 0, maxIntensity, maxGradient);
-        this.controlPoints = new ArrayList<ControlRectangle>();
+        this.controlRectangles = new ArrayList<ControlRectangle>();
     }
 
     public double getMaxIntensity() {
@@ -36,7 +36,11 @@ public class SurfaceTransferFunction {
     }
 
     public ArrayList<ControlRectangle> getControlRectangles() {
-        return controlPoints;
+        return controlRectangles;
+    }
+    
+    public ControlRectangle getControlRectangle(int idx) {
+        return controlRectangles.get(idx);
     }
 
     public int addControlRectangle(Rectangle2D.Double area, Color color, double alphaf) {
@@ -45,25 +49,27 @@ public class SurfaceTransferFunction {
         }
 
         ControlRectangle cp = new ControlRectangle(area, color, alphaf);
-        controlPoints.add(cp);
+        controlRectangles.add(cp);
         
         changed();
         
-        return controlPoints.size() - 1;
+        return controlRectangles.size() - 1;
     }
 
     public void removeControlRectangle(int idx) {
-        controlPoints.remove(idx);
+        controlRectangles.remove(idx);
         changed();
     }
 
     public void updateControlRectangleAlpha(int idx, double a) {
-        controlPoints.get(idx).alpha = a;
+        if (controlRectangles.get(idx).alpha == a) return;
+        
+        controlRectangles.get(idx).alpha = a;
         changed();
     }
 
     public void updateControlRectangleColor(int idx, Color color) {
-        controlPoints.get(idx).color = color;
+        controlRectangles.get(idx).color = color;
         changed();
     }
 

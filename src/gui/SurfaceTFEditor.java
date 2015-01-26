@@ -6,9 +6,14 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JColorChooser;
 import volvis.SurfaceTransferFunction;
-import volvis.TFColor;
+import volvis.SurfaceTransferFunction.ControlRectangle;
 
 /**
  *
@@ -18,6 +23,7 @@ public class SurfaceTFEditor extends javax.swing.JPanel {
 
     private SurfaceTransferFunction tfunc;
     private SurfaceTFView tfView;
+    
     private int selected;
 
     public SurfaceTFEditor(SurfaceTransferFunction tfunc) {
@@ -42,11 +48,12 @@ public class SurfaceTFEditor extends javax.swing.JPanel {
         tfView.drawPlot(gradientIntensityPlot, maximumGradient);
     }
 
-    public void setSelectedInfo(int idx, int s, double a, TFColor c) {
+    public void setSelectedInfo(int idx) {
+        ControlRectangle r = tfunc.getControlRectangle(idx);
+        
         selected = idx;
-        scalarTextField.setText(Integer.toString(s));
-        opacityTextField.setText(String.format("%.2f", a));
-        colorButton.setBackground(new Color((float) c.r, (float) c.g, (float) c.b));
+        opacityTextField.setText(String.format("%.2f", r.alpha));
+        colorButton.setBackground(r.color);
     }
 
     /**
@@ -59,10 +66,8 @@ public class SurfaceTFEditor extends javax.swing.JPanel {
     private void initComponents() {
 
         histogramPanel = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
-        scalarTextField = new javax.swing.JTextField();
         opacityTextField = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
         colorButton = new javax.swing.JButton();
@@ -81,24 +86,24 @@ public class SurfaceTFEditor extends javax.swing.JPanel {
             .add(0, 254, Short.MAX_VALUE)
         );
 
-        jLabel1.setText("Scalar value");
-
         jLabel2.setText("Opacity");
 
         jLabel3.setText("Color");
 
-        scalarTextField.setEditable(false);
-        scalarTextField.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        scalarTextField.setFocusable(false);
-        scalarTextField.setMaximumSize(new java.awt.Dimension(84, 28));
-        scalarTextField.setMinimumSize(new java.awt.Dimension(84, 28));
-
-        opacityTextField.setEditable(false);
         opacityTextField.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         opacityTextField.setToolTipText("");
-        opacityTextField.setFocusable(false);
         opacityTextField.setMaximumSize(new java.awt.Dimension(84, 28));
         opacityTextField.setMinimumSize(new java.awt.Dimension(84, 28));
+        opacityTextField.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                opacityTextFieldFocusLost(evt);
+            }
+        });
+        opacityTextField.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                opacityTextFieldKeyTyped(evt);
+            }
+        });
 
         jLabel4.setText("Gradient");
 
@@ -134,15 +139,12 @@ public class SurfaceTFEditor extends javax.swing.JPanel {
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(layout.createSequentialGroup()
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(jLabel1)
                             .add(jLabel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 74, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(org.jdesktop.layout.GroupLayout.TRAILING, jLabel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 74, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(scalarTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
-                                .add(colorButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
-                                .add(opacityTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                            .add(colorButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                            .add(opacityTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(jPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addContainerGap())
@@ -173,10 +175,7 @@ public class SurfaceTFEditor extends javax.swing.JPanel {
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(layout.createSequentialGroup()
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                            .add(jLabel1)
-                            .add(scalarTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(0, 0, 0)
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                             .add(jLabel2)
                             .add(opacityTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
@@ -200,10 +199,37 @@ public class SurfaceTFEditor extends javax.swing.JPanel {
         }
 
     }//GEN-LAST:event_colorButtonActionPerformed
+
+    private void opacityTextFieldFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_opacityTextFieldFocusLost
+        if (selected < 0) {
+            return;
+        }
+        
+        double a;
+        try {
+            a = NumberFormat.getInstance(Locale.getDefault()).parse(opacityTextField.getText().trim()).doubleValue();
+        } catch (ParseException e) {
+            return;
+        }
+        
+        tfunc.updateControlRectangleAlpha(selected, a);
+        tfView.repaint();
+    }//GEN-LAST:event_opacityTextFieldFocusLost
+
+    private void opacityTextFieldKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_opacityTextFieldKeyTyped
+        try {
+            NumberFormat.getInstance(Locale.getDefault()).parse(opacityTextField.getText().trim());
+        } catch (ParseException e) {
+            opacityTextField.setForeground(Color.red);
+            return;
+        }
+        
+        opacityTextField.setForeground(Color.black);
+    }//GEN-LAST:event_opacityTextFieldKeyTyped
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton colorButton;
     private javax.swing.JPanel histogramPanel;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -211,6 +237,5 @@ public class SurfaceTFEditor extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JTextField opacityTextField;
-    private javax.swing.JTextField scalarTextField;
     // End of variables declaration//GEN-END:variables
 }

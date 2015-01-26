@@ -153,9 +153,10 @@ public class SurfaceTFView extends javax.swing.JPanel {
         );
     }
     
-    protected void createControlRectangle(Rectangle rectangleBeingCreated) {
-        stfFunc.addControlRectangle(valueRectFromScreenRect(rectangleBeingCreated), Color.yellow, 0.5);
+    protected int createControlRectangle(Rectangle rectangleBeingCreated) {
+        int idx = stfFunc.addControlRectangle(valueRectFromScreenRect(rectangleBeingCreated), Color.yellow, 0.5);
         repaint();
+        return idx;
     }
 
     private class ControlPointHandler implements MouseMotionListener, MouseListener {
@@ -242,7 +243,8 @@ public class SurfaceTFView extends javax.swing.JPanel {
         @Override
         public void mouseReleased(MouseEvent e) {
             if (creatingRectangle && rectangleBeingCreated != null && rectangleBeingCreated.width > 0 && rectangleBeingCreated.height > 0) {
-                createControlRectangle(rectangleBeingCreated);
+                int idx = createControlRectangle(rectangleBeingCreated);
+                editor.setSelectedInfo(idx);
             }
             
             creatingRectangle = false;
@@ -262,9 +264,10 @@ public class SurfaceTFView extends javax.swing.JPanel {
             
             if (inside) {
                 if (e.getButton() == MouseEvent.BUTTON1 || e.getButton() == MouseEvent.BUTTON2) {
-                    // TODO: Ergens info tonen in een boxje zodat je de kleur kan zien en aanpassen e.d.
+                    editor.setSelectedInfo(idx);
                 } else if (e.getButton() == MouseEvent.BUTTON3) {
                     stfFunc.removeControlRectangle(idx);
+                    repaint();
                 }
             }
         }
