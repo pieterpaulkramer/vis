@@ -15,15 +15,7 @@ import java.awt.image.BufferedImage;
 import java.util.List;
 import javax.swing.SwingUtilities;
 import render.interpolate.Interpolator;
-
-import render.order.DirectedSequentialOrder;
 import render.order.RenderOrder;
-
-import render.order.RandomOrder;
-import render.order.RenderOrder;
-import render.order.SequentialOrder;
-
-import render.order.SpiralOrder;
 import util.TFChangeListener;
 import volume.Volume;
 
@@ -50,7 +42,9 @@ public class RenderingController extends Renderer implements TFChangeListener {
     private OpacityWeightEditor owEditor;
     private OpacityWeightPanel oWeightPanel;
 
-    // private SurfaceTransferFunction TODO;
+    
+    private SurfaceTransferFunction stfFunc;
+
     private SurfaceTFEditor stfEditor;
     private SurfaceTFPanel stfPanel;
 
@@ -109,7 +103,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
         SurfaceTransferFunction stfFunc = new SurfaceTransferFunction(volume.getMaximumGradient(), volume.getMaximum());
         stfFunc.addTFChangeListener(this);
         stfEditor = new SurfaceTFEditor(stfFunc);
-        stfEditor.setGradientIntenstityPlot(volume.getSurfacesPlot(100));
+        stfEditor.setGradientIntenstityPlot(volume.getSurfacesPlot(100), volume.getMaximumGradient());
         stfPanel.setSTFEditor(stfEditor);
 
         // set up image for storing the resulting rendering
@@ -157,8 +151,8 @@ public class RenderingController extends Renderer implements TFChangeListener {
 
         List threadsJobs = RenderOrder.getOptimalThreadedOrders(N_THREADS_SQ_ROOT, imageBuffer.getWidth());
 
-        for (int i = 0; i < threadsJobs.size(); i++) {
-            threadedRenderers[i] = new RenderThread(this, viewMatrix, (RenderOrder) threadsJobs.get(i), imageBuffer, mode, intmode, volume, tFunc, oFunc, maintainedAlphas, zoom, pan);
+        for (int i=0; i<threadsJobs.size(); i++) {
+            threadedRenderers[i] = new RenderThread(this, viewMatrix, (RenderOrder)threadsJobs.get(i), imageBuffer, mode, intmode, volume, tFunc, oFunc, stfFunc, maintainedAlphas, zoom, pan);
             threadedRenderers[i].execute();
         }
     }
@@ -193,7 +187,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
     }
 
     void ochanged() {
-        this.maintainedAlphas = new RaycastRenderer(mode, intmode, volume, tFunc, oFunc, null).computeAllAlphas();
+        this.maintainedAlphas = new RaycastRenderer(mode, intmode, volume, tFunc, oFunc, stfFunc, null).computeAllAlphas();
     }
 
     @Override

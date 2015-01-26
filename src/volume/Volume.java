@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import render.interpolate.Grid;
 import render.interpolate.Interpolator;
 
+
 /**
  *
  * @author michel
@@ -165,6 +166,7 @@ public class Volume {
                 return v.getVoxel(x, y, z, true);
             }
         };
+        ip.setGrid(g);
         double ds = 1d/scale;
         for(int x = 0; x<v.getDimX()*scale;x++)
         {

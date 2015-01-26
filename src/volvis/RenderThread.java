@@ -22,8 +22,8 @@ public class RenderThread extends SwingWorker {
     private final Object completedLock;
     private volatile boolean stopped = false;
     
-    public RenderThread(RenderingController controller, double[] viewMatrix, RenderOrder jobs, Image imageBuffer, int mode, int intmode, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, double[][][] alphas, double zoom, double[] pan) {
-        renderer = new RaycastRenderer(mode, intmode, vol, tFunc, oFunc, alphas);
+    public RenderThread(RenderingController controller, double[] viewMatrix, RenderOrder jobs, Image imageBuffer, int mode, int intmode, Volume vol, TransferFunction tFunc, OpacityFunction oFunc, SurfaceTransferFunction stfFunc, double[][][] alphas, double zoom, double[] pan) {
+        renderer = new RaycastRenderer(mode, intmode, vol, tFunc, oFunc, stfFunc, alphas);
         this.zoom = zoom;
         this.viewMatrix = viewMatrix;
         this.imageBuffer = imageBuffer;
