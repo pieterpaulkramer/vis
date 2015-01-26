@@ -4,11 +4,13 @@
  */
 package gui;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
@@ -18,8 +20,10 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.SwingUtilities;
+import volume.Volume;
 import volvis.OpacityFunction;
 import volvis.SurfaceTransferFunction;
+import volvis.SurfaceTransferFunction.ControlRectangle;
 import volvis.TFColor;
 import volvis.TransferFunction;
 
@@ -36,7 +40,10 @@ public class SurfaceTFView extends javax.swing.JPanel {
     private int selected;
     private Point dragStart;
     
-    private int[][] plot;
+    private BufferedImage plotRendering;
+    private int plotWidth;
+    private int plotHeight;
+    private double plotMaxYGradient;
     private int plotMaxPoints;
 
     /**
@@ -51,17 +58,30 @@ public class SurfaceTFView extends javax.swing.JPanel {
         //addMouseListener(new SelectionHandler());
     }
     
-    public void drawPlot(int[][] plot) {
-        this.plot = plot;
-        
+    public void drawPlot(int[][] plot, double maximumGradient) {
         plotMaxPoints = 0;
-        for (int x=0; x<this.plot.length; x++) {
-            for (int y=this.plot[0].length-1; y>=0; y--) {
+        for (int x=0; x<plot.length; x++) {
+            for (int y=plot[0].length-1; y>=0; y--) {
                 // TODO: Dit normaliseren niet voor de totale afbeelding maar lokaal
                 // (per horizontale strip?) zodat je vage stroken hoger in de afbeelding
                 // ook nog kan zien. Of: deze stroken sterker tekenen als je er met je muis
                 // in de buurt bent.
                 plotMaxPoints = Math.max(plotMaxPoints, plot[x][y]);
+            }
+        }
+        
+        plotWidth = plot.length;
+        plotHeight = plot[0].length;
+        plotMaxYGradient = maximumGradient;
+        plotRendering = new BufferedImage(plotWidth, plotHeight, BufferedImage.TYPE_INT_ARGB);
+        
+        int alpha_mul_factor = plotMaxPoints < 255 ? 255 / plotMaxPoints : 1;
+
+        // Draw points
+        for (int x=0; x<plotWidth; x++) {
+            for (int y=0; y<plotHeight; y++) {
+                int alpha = Math.min(255, plot[x][y]*alpha_mul_factor);
+                plotRendering.setRGB(x, plotHeight-y-1, alpha << 24); // Black with a certain gradient
             }
         }
         
@@ -75,19 +95,29 @@ public class SurfaceTFView extends javax.swing.JPanel {
         g2.setColor(Color.white);
         g2.fillRect(0, 0, getWidth(), getHeight());
         
-        BufferedImage rendering = new BufferedImage(this.plot.length, this.plot[0].length, BufferedImage.TYPE_INT_ARGB);
+        g2.drawImage(this.plotRendering, 0, 0, getWidth(), getHeight(), null);
         
-        int alpha_mul_factor = plotMaxPoints < 255 ? 255 / plotMaxPoints : 1;
-
-        // Draw points
-        for (int x=0; x<this.plot.length; x++) {
-            for (int y=0; y<this.plot[x].length; y++) {
-                int alpha = Math.min(255, this.plot[x][y]*alpha_mul_factor);
-                rendering.setRGB(x, this.plot[x].length-y-1, alpha << 24); // Black with a certain gradient
-            }
+        for (ControlRectangle rect: stfFunc.getControlPoints()) {
+            Rectangle screenRect = screenRectFromValueRect(rect.area);
+            
+            g2.setColor(rect.color);
+            g2.fillRect(screenRect.x, screenRect.y, screenRect.width, screenRect.height);
+            
+            g2.setColor(Color.black);
+            g2.setStroke(new BasicStroke(1));
+            g2.drawRect(screenRect.x, screenRect.y, screenRect.width, screenRect.height);
         }
+    }
+    
+    private Rectangle screenRectFromValueRect(Rectangle2D.Double r) {
+        return null;
+    }
+    
+    private Rectangle2D.Double valueRectFromScreenRect(Rectangle r) {
         
-        g2.drawImage(rendering, 0, 0, getWidth(), getHeight(), null);
+        
+        return null;
+    }
 
         /*
         // Draw control points
@@ -118,8 +148,8 @@ public class SurfaceTFView extends javax.swing.JPanel {
             }
             xprev = xpos3;
         }
-        * */
     }
+        * */
 
     private Ellipse2D getControlPointArea(OpacityFunction.ControlPoint cp) {
         return null;

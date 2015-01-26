@@ -38,8 +38,8 @@ public class SurfaceTFEditor extends javax.swing.JPanel {
         return tfView.getHeight();
     }
     
-    public void setGradientIntenstityPlot(int[][] gradientIntensityPlot) {
-        tfView.drawPlot(gradientIntensityPlot);
+    public void setGradientIntenstityPlot(int[][] gradientIntensityPlot, double maximumGradient) {
+        tfView.drawPlot(gradientIntensityPlot, maximumGradient);
     }
 
     public void setSelectedInfo(int idx, int s, double a, TFColor c) {

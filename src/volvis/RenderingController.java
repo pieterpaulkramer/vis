@@ -101,7 +101,7 @@ public class RenderingController extends Renderer implements TFChangeListener {
         SurfaceTransferFunction stfFunc = new SurfaceTransferFunction(volume.getMaximumGradient(), volume.getMaximum());
         stfFunc.addTFChangeListener(this);
         stfEditor = new SurfaceTFEditor(stfFunc);
-        stfEditor.setGradientIntenstityPlot(volume.getSurfacesPlot(100));
+        stfEditor.setGradientIntenstityPlot(volume.getSurfacesPlot(100), volume.getMaximumGradient());
         stfPanel.setSTFEditor(stfEditor);
         
         // set up image for storing the resulting rendering
