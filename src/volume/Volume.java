@@ -7,6 +7,8 @@ package volume;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import render.interpolate.Grid;
+import render.interpolate.Interpolator;
 
 /**
  *
@@ -151,5 +153,30 @@ public class Volume {
         }
         
         return plot;
+    }
+    
+    public static Volume enhanceVolume(final Volume v, Interpolator ip, int scale)
+    {
+        Volume nv = new Volume(v.getDimX()*scale,v.getDimY()*scale,v.getDimZ()*scale);
+        Grid g = new Grid(){
+
+            @Override
+            public double getValue(int x, int y, int z) {
+                return v.getVoxel(x, y, z, true);
+            }
+        };
+        double ds = 1d/scale;
+        for(int x = 0; x<v.getDimX()*scale;x++)
+        {
+            for(int y = 0; y<v.getDimY()*scale;y++)
+            {
+                for(int z = 0; z<v.getDimZ()*scale;z++)
+                {
+                    short val = (short)ip.getValue(x*ds, y*ds, z*ds);
+                    nv.setVoxel(x, y, z, val);
+                }
+            }
+        }
+        return nv;
     }
 }

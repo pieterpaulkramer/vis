@@ -95,11 +95,11 @@ public class Visualization implements GLEventListener, TFChangeListener, ActionL
             renderingParametersChanged = false;
         }
         
-        BufferedImage imageBuffer = renderer.rendering();
+        Image imageBuffer = renderer.rendering();
         Volume vol = renderer.getVolume();
         
         if (imageBuffer != null && vol != null) {
-            draw(gl, imageBuffer, vol);
+            draw(gl, imageBuffer.getImage(), vol);
             
             if (continuousDrawingTimer.isRunning()) {
                 continuousDrawingTimer.restart();

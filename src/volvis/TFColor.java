@@ -33,6 +33,5 @@ public class TFColor {
         g = c.g*c.a+ g*a*(1-c.a);
         b = c.b*c.a+ b*a*(1-c.a);
         a = c.a+ a*(1-c.a);
-        
     }
 }

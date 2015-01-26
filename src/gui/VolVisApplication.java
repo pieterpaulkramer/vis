@@ -10,6 +10,7 @@ import javax.media.opengl.awt.GLCanvas;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.filechooser.FileFilter;
+import render.interpolate.CubicInterpolator;
 import volume.Volume;
 import volvis.RenderingController;
 import volvis.Visualization;
@@ -41,7 +42,8 @@ public class VolVisApplication extends javax.swing.JFrame {
         renderController = new RenderingController();
         visualization.setRenderer(renderController);
         renderController.addTFChangeListener(visualization);
-        tabbedPanel.addTab("Raycaster", renderController.getTFuncPanel());
+        jPanel1.add(renderController.getTFuncPanel());
+        //tabbedPanel.addTab("Raycaster", renderController.getTFuncPanel());
         tabbedPanel.addTab("Opacity Weighter", renderController.getOWeightPanel());
         tabbedPanel.addTab("Surface discovery", renderController.getSurfaceTFPanel());
         this.setExtendedState( this.getExtendedState()|JFrame.MAXIMIZED_BOTH );
@@ -63,6 +65,9 @@ public class VolVisApplication extends javax.swing.JFrame {
         loadButton = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         infoTextPane = new javax.swing.JTextPane();
+        jSpinner1 = new javax.swing.JSpinner();
+        jLabel1 = new javax.swing.JLabel();
+        jPanel1 = new javax.swing.JPanel();
         renderPanel = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -80,26 +85,51 @@ public class VolVisApplication extends javax.swing.JFrame {
         infoTextPane.setEditable(false);
         jScrollPane1.setViewportView(infoTextPane);
 
+        jSpinner1.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(0), Integer.valueOf(0), null, Integer.valueOf(1)));
+
+        jLabel1.setText("Volume enhance factor:");
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 296, Short.MAX_VALUE)
+        );
+
         javax.swing.GroupLayout loadVolumeLayout = new javax.swing.GroupLayout(loadVolume);
         loadVolume.setLayout(loadVolumeLayout);
         loadVolumeLayout.setHorizontalGroup(
             loadVolumeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(loadVolumeLayout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, loadVolumeLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(loadVolumeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1)
-                    .addGroup(loadVolumeLayout.createSequentialGroup()
+                .addGroup(loadVolumeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, loadVolumeLayout.createSequentialGroup()
                         .addComponent(loadButton)
-                        .addGap(0, 328, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 179, Short.MAX_VALUE)
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jSpinner1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         loadVolumeLayout.setVerticalGroup(
             loadVolumeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(loadVolumeLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(loadButton)
+                .addGroup(loadVolumeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(loadVolumeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(loadButton)
+                        .addComponent(jSpinner1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 492, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 190, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -137,7 +167,7 @@ public class VolVisApplication extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void loadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadButtonActionPerformed
-        // TODO add your handling code here:
+
         JFileChooser fc = new JFileChooser();
         fc.setCurrentDirectory(new File("../vis/set2_data/"));
         fc.setFileFilter(new FileFilter() {
@@ -149,10 +179,7 @@ public class VolVisApplication extends javax.swing.JFrame {
                         return true;
                     }
                 }
-                if (f.isDirectory()) {
-                    return true;
-                }
-                return false;
+                return f.isDirectory();
             }
 
             @Override
@@ -164,8 +191,12 @@ public class VolVisApplication extends javax.swing.JFrame {
         if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fc.getSelectedFile();
                 volume = new Volume(file);
-                
-                String infoText = new String("Volume data info:\n");
+                Integer enhance = (Integer)jSpinner1.getValue();
+                if(enhance>1)
+                {
+                    volume = Volume.enhanceVolume(volume, new CubicInterpolator(), enhance);
+                }
+                String infoText = "Volume data info:\n";
                 infoText = infoText.concat(file.getName() + "\n");
                 infoText = infoText.concat("dimensions:\t\t" + volume.getDimX() + " x " + volume.getDimY() + " x " + volume.getDimZ() + "\n");
                 infoText = infoText.concat("voxel value range:\t" + volume.getMinimum() + " - " + volume.getMaximum());
@@ -212,7 +243,10 @@ public class VolVisApplication extends javax.swing.JFrame {
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextPane infoTextPane;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JSpinner jSpinner1;
     private javax.swing.JButton loadButton;
     private javax.swing.JPanel loadVolume;
     private javax.swing.JPanel renderPanel;

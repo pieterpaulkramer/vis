@@ -55,7 +55,7 @@ public class RaycastRenderer {
         computationRunningLock = new Object();
     }
 
-    public void visualize(double[] viewMatrix, BufferedImage buffer, RenderOrder jobs, double zoom, double[] pan) {
+    public void visualize(double[] viewMatrix, Image buffer, RenderOrder jobs, double zoom, double[] pan) {
 
         // vector uVec and vVec define a plane through the origin, 
         // perpendicular to the view vector viewVec
@@ -77,26 +77,55 @@ public class RaycastRenderer {
         for (Tuple<int[], Integer> pix : jobs.getAllCoordinates()) {
 
             Ray ray = CastRay(uVec, pix.o1[0], imageCenter, vVec, pix.o1[1], volumeCenter, viewVec, pan);
-
-            TFColor voxelColor = computeColor(ray);
-
-            // BufferedImage expects a pixel color packed as ARGB in an int
-            int c_alpha = voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
-            int c_red = voxelColor.r <= 1.0 ? (int) Math.floor(voxelColor.r * 255) : 255;
-            int c_green = voxelColor.g <= 1.0 ? (int) Math.floor(voxelColor.g * 255) : 255;
-            int c_blue = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
-            int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
-
+            computeColor(ray);
             synchronized (computationRunningLock) {
                 if (computationRunning) {
                     for (int[] p : RenderOrder.getPixelsToFill(pix)) {
-                        buffer.setRGB(p[0], p[1], pixelColor);
+                        buffer.setRay(p[0], p[1], ray);
                     }
                 } else {
                     return;
                 }
             }
         }
+    }
+
+    private TFColor computeColor(Ray ray) {
+        switch (mode) {
+            case (MIP): {
+                int max = 0;
+                int idx = 0;
+                for (int i = 0; i < ray.getCoordinates().size(); i++) {
+                    int v = getVoxel(ray.getCoordinates().get(i));
+                    if (max < v) {
+                        idx = i;
+                        max = v;
+                    }
+                }
+                for (int i = 0; i < ray.getCoordinates().size(); i++) {
+                    ray.addRenderResult(i == idx ? tFunc.getColor(max) : new TFColor());
+                }
+                break;
+
+            }
+            case (COMPOSITING): {
+                for (double[] coord : ray) {
+                    TFColor cur = tFunc.getColor(getVoxel(coord));
+                    ray.addRenderResult(cur);
+                }
+                break;
+            }
+            case (OPACITYWEIGHTING): {
+                for (double[] coord : ray) {
+                    TFColor cur = tFunc.getColor(getVoxel(coord));
+                    double a = getAlpha(coord);
+                    cur.a = a;
+                    ray.addRenderResult(cur);
+                }
+                break;
+            }
+        }
+        return ray.getResult();
     }
 
     /**
@@ -145,21 +174,6 @@ public class RaycastRenderer {
         };
     }
 
-    private double computeSingleAlphaLevel(double x, double y, double z, double r, int fv, double fac) {
-        double[] grad = lGradientVector(x, y, z);
-
-        double gradl = VectorMath.length(grad);
-        //gradl = 1;
-        int val = getVoxel(x, y, z);
-        if (val == fv && gradl == 0) {
-            return fac;
-        } else if (gradl > 0 && val - r * gradl <= fv && val + r * gradl >= fv) {
-            return fac * (1d - ((1d / r) * (Math.abs(fv - val) / gradl)));
-        } else {
-            return 0;
-        }
-    }
-
     private double getAlpha(double[] coord) {
         return getAlpha(coord[0], coord[1], coord[2]);
     }
@@ -186,7 +200,7 @@ public class RaycastRenderer {
         for (int x = 0; x < volume.getDimX(); x++) {
             for (int y = 0; y < volume.getDimY(); y++) {
                 for (int z = 0; z < volume.getDimZ(); z++) {
-                    alphas[x][y][z] = computeMultiAlphaLevel(x, y, z);
+                    alphas[x][y][z] = computeMultiRBAlphaLevel(x, y, z);
                 }
             }
         }
@@ -194,45 +208,59 @@ public class RaycastRenderer {
         return alphas;
     }
 
-    private double computeMultiAlphaLevel(int x, int y, int z) {
+    private double computeMultiISOAlphaLevel(int x, int y, int z) {
         double res = 1;
         for (int i = 0; i < oFunc.getControlPoints().size(); i++) {
-            res *= (1 - computeSingleAlphaLevel(x, y, z, oFunc.getControlPoints().get(i).width, oFunc.getControlPoints().get(i).value, oFunc.getControlPoints().get(i).alphafactor));
+            res *= (1 - computeSingleIsoAlphaLevel(x, y, z, oFunc.getControlPoints().get(i).width, oFunc.getControlPoints().get(i).value, oFunc.getControlPoints().get(i).alphafactor));
         }
         return 1 - res;
     }
 
-    private TFColor computeColor(Ray ray) {
-        switch (mode) {
-            case (MIP): {
-                int max = 0;
+    private double computeSingleIsoAlphaLevel(double x, double y, double z, double r, int fv, double fac) {
+        if (fac == 0) {
+            return 0;
+        }
+        double[] grad = lGradientVector(x, y, z);
 
-                for (double[] coord : ray) {
-                    max = Math.max(max, getVoxel(coord));
-                }
-                return tFunc.getColor(max);
-            }
-            case (COMPOSITING): {
-                TFColor color = new TFColor();
-                for (double[] coord : ray) {
-                    TFColor cur = tFunc.getColor(getVoxel(coord));
-                    color.layer(cur);
-                }
-                return color;
-            }
-            case (OPACITYWEIGHTING): {
-                TFColor color = new TFColor();
-                for (double[] coord : ray) {
-                    TFColor cur = tFunc.getColor(getVoxel(coord));
-                    double a = getAlpha(coord);
-                    cur.a = a;
-                    color.layer(cur);
-                }
-                return color;
-            }
-            default: {
-                return tFunc.getColor(0);
-            }
+        double gradl = VectorMath.length(grad);
+        //gradl = 1;
+        int val = getVoxel(x, y, z);
+        if (val == fv && gradl == 0) {
+            return fac;
+        } else if (gradl > 0 && val - r * gradl <= fv && val + r * gradl >= fv) {
+            return fac * (1d - ((1d / r) * (Math.abs(fv - val) / gradl)));
+        } else {
+            return 0;
         }
     }
+
+    private double computeMultiRBAlphaLevel(double x, double y, double z) {
+        short val = getVoxel(x, y, z);
+        double[] grad = lGradientVector(x, y, z);
+        double lgrad = VectorMath.length(grad);
+        double av1, av2;
+        double v1, v2;
+        ArrayList<OpacityFunction.ControlPoint> cps = oFunc.getControlPoints();
+        int i = 0;
+        while (i < cps.size() && cps.get(i).value < val) {
+            i++;
+        }
+        i--;
+        if (i == -1) {
+            return 0;
+        }
+        av1 = cps.get(i).alphafactor;
+        av2 = cps.get(i + 1).alphafactor;
+        v1 = cps.get(i).value;
+        v2 = cps.get(i + 1).value;
+        if (v1 > val) {
+            throw new RuntimeException();
+        }
+        if (v2 < val) {
+            throw new RuntimeException();
+        }
+        double alphabase = av2 * ((val - v1) / (v2 - v1)) + av1 * ((v2 - val) / (v2 - v1));
+        return Math.min(1, alphabase * lgrad);
+    }
+
 }

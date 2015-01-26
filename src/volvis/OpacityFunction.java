@@ -5,6 +5,7 @@
 package volvis;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import util.TFChangeListener;
 
 /**
@@ -24,6 +25,9 @@ public class OpacityFunction {
         sMin = min;
         sMax = max;
         controlPoints = new ArrayList<ControlPoint>();
+        controlPoints.add(new ControlPoint(min,0,0));
+        controlPoints.add(new ControlPoint(max,0,0));
+
     }
 
     public int getMinimum() {
@@ -44,8 +48,19 @@ public class OpacityFunction {
         }
 
         ControlPoint cp = new ControlPoint(value, width, alphaf);
-        controlPoints.add(cp);
-        return controlPoints.size() - 1;
+        int idx = 0;
+        while (idx < controlPoints.size() && controlPoints.get(idx).compareTo(cp) < 0) {
+            idx++;
+        }
+
+
+        if (controlPoints.get(idx).compareTo(cp) == 0) {
+            controlPoints.set(idx, cp);
+        } else {
+            controlPoints.add(idx, cp);
+        }
+
+        return controlPoints.indexOf(cp);
     }
 
     public void removeControlPoint(int idx) {
@@ -54,6 +69,7 @@ public class OpacityFunction {
 
     public void updateControlPointScalar(int index, int s) {
         controlPoints.get(index).value = s;
+        Collections.sort(controlPoints);
     }
 
     public void updateControlPointAlpha(int index, double a) {
